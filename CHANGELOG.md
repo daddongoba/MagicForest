@@ -6,8 +6,8 @@
 
 - **目的**：让参与项目的 AI 先同步并检查 Git 进度，再制作功能，最后整理增量、维护记录并提交推送。
 - **文件范围**：更新 `AGENTS.md`，补充必需工作顺序、安全同步方式、验证和交付要求；更新 `README.md`，增加可直接提供给 AI 的任务提示。
-- **上传状态**：待提交与推送。
-- **验证结果**：检查仓库当前约定与 README 后编写；本次只改流程文档，不涉及 UE 资产或功能验证。
+- **上传状态**：已上传至公开仓库 [daddongoba/MagicForest](https://github.com/daddongoba/MagicForest)，分支 `main`；实现提交 [94e6a9c](https://github.com/daddongoba/MagicForest/commit/94e6a9c51e18b42d36af0ed0495722471a3e1663)，远程分支已核对。
+- **验证结果**：检查仓库当前约定与 README 后编写；`git diff --check` 通过；本次只改流程文档，不涉及 UE 资产或功能验证。
 - **未验证项**：尚未在其他 AI 编码工具中实测其对 `AGENTS.md` 的读取情况。工具若不自动读取该文件，须在任务提示中附上 README 提供的指令并确保文件处于其上下文中。
 - **回退方式**：可通过 Git 恢复这两份文档的上一版本。
 
