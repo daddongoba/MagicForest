@@ -2,6 +2,14 @@
 
 本文件记录增量仓库每次提交上传的内容。最新更新放在最前面；每次上传前必须把本条记录与对应文件一起提交。验证状态应区分“本次验证”“历史记录”与“未验证”。
 
+## 2026-10-06-03：仓库改名并公开
+
+- **目的**：将 GitHub 仓库名改为 `MagicForest` 并设为公开，让其他人可以查看迭代文件与记录。
+- **文件范围**：本次修改 `README.md` 与 `CHANGELOG.md` 的仓库名称、链接和可见性说明；UE 功能资产没有变化。
+- **上传状态**：GitHub 仓库设置已变更为公开，名称已核实为 `daddongoba/MagicForest`；文档提交待上传。
+- **验证与应用**：仓库 API 返回 `private=false` 且名称匹配。使用新仓库地址克隆；应用功能文件仍需匹配的 UE 5.8 完整工程。
+- **回退方式**：可将仓库可见性恢复为私有并恢复旧名；公开期间仓库内容可能已被访问或克隆。
+
 ## 2026-10-06-02：补记首批上传结果
 
 - **适用基线 / 前置更新**：本仓库批次 `2026-10-06-01`；引擎与功能资产未变。
@@ -15,7 +23,7 @@
 
 - **功能更新范围**：2026-10-05 至 2026-10-06。
 - **适用基线**：`demo3_UE58` 1.5 完整工程，UE 5.8（历史记录为 5.8.3）。这是首批增量文件，无本仓库前置批次。
-- **上传状态**：已上传至私有仓库 [daddongoba/demo3-ue58-updates](https://github.com/daddongoba/demo3-ue58-updates)，分支 `main`；首批提交 [a834c21](https://github.com/daddongoba/demo3-ue58-updates/commit/a834c21c10ae4cf98b7708d4eca73961361d09b2)，上传结果已核对。
+- **上传状态**：已上传至 [daddongoba/MagicForest](https://github.com/daddongoba/MagicForest)，分支 `main`；首批提交 [a834c21](https://github.com/daddongoba/MagicForest/commit/a834c21c10ae4cf98b7708d4eca73961361d09b2)，上传结果已核对。仓库目前公开。
 - **目的**：保存 NPC 游走蓝图、玩家采摘蘑菇与背包 HUD 的迭代文件，并明确增量仓库的用途及后续记录要求。
 
 ### 文件范围
