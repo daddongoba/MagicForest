@@ -1,0 +1,19 @@
+{
+  "FileVersion": 3,
+  "Version": 1,
+  "VersionName": "2.0.0",
+  "FriendlyName": "Dialogue Memory Table",
+  "Description": "Complete Alchemy dialogue and commission gameplay runtime: three-layer NPC personas, DeepSeek chat gateway, 22 major cards, four court modifiers, nine commissions, vector scoring, world-consequence prompts, and bounded dialogue-memory SaveGame tables.",
+  "Category": "AI",
+  "CreatedBy": "Codex",
+  "CanContainContent": false,
+  "IsBetaVersion": true,
+  "Installed": false,
+  "Modules": [
+    {
+      "Name": "DialogueMemoryTable",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    }
+  ]
+}

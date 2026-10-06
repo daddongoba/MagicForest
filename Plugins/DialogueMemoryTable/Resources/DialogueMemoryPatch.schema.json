@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DialogueMemoryPatch",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "npc_id", "session_id", "npc_patch", "fact_upserts", "world_suggestions", "open_loop_upserts"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "npc_id": { "type": "string", "enum": ["blacksmith", "operator", "novelist"] },
+    "session_id": { "type": "integer", "minimum": 1 },
+    "npc_patch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["attitude", "relationship_summary", "last_exchange_summary", "topic_tags"],
+      "properties": {
+        "attitude": { "type": "string", "enum": ["guarded", "neutral", "warm", "hurt", "hostile"] },
+        "trust_delta_suggested": { "type": "integer", "minimum": -10, "maximum": 10, "default": 0 },
+        "relationship_summary": { "type": "string", "maxLength": 120 },
+        "last_exchange_summary": { "type": "string", "maxLength": 160 },
+        "last_quote": { "type": "string", "maxLength": 48 },
+        "topic_tags": { "type": "array", "maxItems": 8, "uniqueItems": true, "items": { "type": "string", "maxLength": 32 } }
+      }
+    },
+    "fact_upserts": {
+      "type": "array",
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["fact_key", "subject", "predicate", "object_text", "visibility", "status", "importance", "confidence", "authority"],
+        "properties": {
+          "fact_key": { "type": "string", "pattern": "^[a-z0-9_.-]{1,64}$" },
+          "subject": { "type": "string", "maxLength": 48 },
+          "predicate": { "type": "string", "maxLength": 32 },
+          "object_text": { "type": "string", "maxLength": 80 },
+          "visibility": { "type": "string", "enum": ["npc_private", "player_known", "world_known"] },
+          "status": { "type": "string", "enum": ["active", "resolved", "contradicted"] },
+          "importance": { "type": "integer", "minimum": 1, "maximum": 5 },
+          "confidence": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "authority": { "type": "string", "enum": ["npc_disclosure", "npc_report", "inference"] }
+        }
+      }
+    },
+    "world_suggestions": {
+      "type": "array",
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["state_key", "value_type", "value_text", "authority", "confidence", "importance"],
+        "properties": {
+          "state_key": { "type": "string", "pattern": "^[a-z0-9_.-]{1,64}$" },
+          "value_type": { "type": "string", "enum": ["bool", "int", "float", "name", "text"] },
+          "value_text": { "type": "string", "maxLength": 64 },
+          "authority": { "type": "string", "enum": ["npc_report", "inference"] },
+          "confidence": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "importance": { "type": "integer", "minimum": 1, "maximum": 5 }
+        }
+      }
+    },
+    "open_loop_upserts": {
+      "type": "array",
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["loop_key", "kind", "summary", "status", "priority", "trigger_tags"],
+        "properties": {
+          "loop_key": { "type": "string", "pattern": "^[a-z0-9_.-]{1,64}$" },
+          "kind": { "type": "string", "enum": ["promise", "question", "secret", "conflict", "goal"] },
+          "summary": { "type": "string", "maxLength": 96 },
+          "status": { "type": "string", "enum": ["open", "resolved", "failed"] },
+          "priority": { "type": "integer", "minimum": 1, "maximum": 5 },
+          "trigger_tags": { "type": "array", "maxItems": 5, "uniqueItems": true, "items": { "type": "string", "maxLength": 32 } }
+        }
+      }
+    }
+  }
+}

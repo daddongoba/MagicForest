@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "npc_id": "blacksmith",
+  "session_id": 42,
+  "npc_patch": {
+    "attitude": "guarded",
+    "trust_delta_suggested": 2,
+    "relationship_summary": "玩家知道她以前拆过东西，但她仍避谈安置办。",
+    "last_exchange_summary": "玩家问到绷带，她承认旧伤不全来自打铁。",
+    "last_quote": "以前拆的东西比现在打的麻烦。",
+    "topic_tags": ["bandage", "former_job", "heat"]
+  },
+  "fact_upserts": [
+    {
+      "fact_key": "blacksmith.former_job_hint",
+      "subject": "blacksmith",
+      "predicate": "former_job",
+      "object_text": "拆东西的",
+      "visibility": "player_known",
+      "status": "active",
+      "importance": 4,
+      "confidence": 100,
+      "authority": "npc_disclosure"
+    }
+  ],
+  "world_suggestions": [],
+  "open_loop_upserts": [
+    {
+      "loop_key": "blacksmith.teacher_identity",
+      "kind": "secret",
+      "summary": "她差点说出老师，但身份尚未确认。",
+      "status": "open",
+      "priority": 5,
+      "trigger_tags": ["teacher", "furnace"]
+    }
+  ]
+}

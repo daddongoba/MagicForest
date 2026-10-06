@@ -1,0 +1,67 @@
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Subsystems/GameInstanceSubsystem.h"
+#include "AlchemyGameplaySubsystem.h"
+#include "DialogueAIServiceSubsystem.generated.h"
+
+DECLARE_DYNAMIC_DELEGATE_TwoParams(FDialogueAICompletion, bool, bSuccess, const FString&, Text);
+
+UCLASS()
+class DIALOGUEMEMORYTABLE_API UDialogueAIServiceSubsystem : public UGameInstanceSubsystem
+{
+    GENERATED_BODY()
+
+public:
+    virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+
+    UFUNCTION(BlueprintCallable, Category = "Dialogue AI|Gateway")
+    void SetGatewayConfig(const FString& InBaseUrl, const FString& InApiKey, const FString& InModel);
+
+    UFUNCTION(BlueprintPure, Category = "Dialogue AI|Gateway")
+    FString GetGatewayBaseUrl() const { return GatewayBaseUrl; }
+
+    UFUNCTION(BlueprintPure, Category = "Dialogue AI|Gateway")
+    FString GetGatewayModel() const { return GatewayModel; }
+
+    UFUNCTION(BlueprintPure, Category = "Dialogue AI|Gateway")
+    bool HasApiKey() const { return !ApiKey.IsEmpty(); }
+
+    UFUNCTION(BlueprintCallable, Category = "Dialogue AI|Chat")
+    void RequestChatCompletion(
+        const TArray<FDialogueMessage>& Messages,
+        float Temperature,
+        int32 MaxTokens,
+        FDialogueAICompletion Callback);
+
+    UFUNCTION(BlueprintCallable, Category = "Dialogue AI|Chat")
+    void RequestNpcDialogue(
+        FName PersonaId,
+        int32 Familiarity,
+        int32 CommissionOrderIndex,
+        const FString& CompactMemoryJson,
+        const TArray<FDialogueMessage>& DialogueHistory,
+        FDialogueAICompletion Callback);
+
+    UFUNCTION(BlueprintCallable, Category = "Dialogue AI|World")
+    void RequestWorldConsequence(
+        int32 CommissionOrderIndex,
+        const FAlchemyEvaluationResult& Evaluation,
+        const FString& CompactMemoryJson,
+        FDialogueAICompletion Callback);
+
+private:
+    UPROPERTY(Transient)
+    FString GatewayBaseUrl;
+
+    UPROPERTY(Transient)
+    FString ApiKey;
+
+    UPROPERTY(Transient)
+    FString GatewayModel;
+
+    void CompleteRequest(
+        const TSharedPtr<class IHttpResponse, ESPMode::ThreadSafe>& Response,
+        bool bWasSuccessful,
+        FDialogueAICompletion Callback) const;
+};

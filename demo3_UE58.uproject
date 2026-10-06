@@ -1,0 +1,43 @@
+{
+	"FileVersion": 3,
+	"EngineAssociation": "5.8",
+	"Category": "",
+	"Description": "demo3 \u8d44\u6e90\u6574\u5408\u9879\u76ee \u2014 UE 5.8.3\uff08WitchHouse 5.4 \u5347\u7ea7 + KindWitch/Mimic/Natta/Dryad/POLYGON \u56db\u7248\u672c\u5347\u7ea7\u5bfc\u5165\uff09",
+	"Modules": [
+		{
+			"Name": "demo3_UE58",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "MovieRenderPipeline",
+			"Enabled": true
+		},
+		{
+			"Name": "PythonScriptPlugin",
+			"Enabled": true
+		},
+		{
+			"Name": "ModelContextProtocol",
+			"Enabled": true
+		},
+		{
+			"Name": "ToolsetRegistry",
+			"Enabled": true
+		},
+		{
+			"Name": "EditorToolset",
+			"Enabled": true
+		},
+		{
+			"Name": "AllToolsets",
+			"Enabled": true
+		},
+		{
+			"Name": "DialogueMemoryTable",
+			"Enabled": true
+		}
+	]
+}
