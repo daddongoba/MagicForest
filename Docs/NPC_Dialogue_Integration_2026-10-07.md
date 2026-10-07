@@ -9,7 +9,7 @@
 - 输入时使用 UI 输入模式，避免文字 E/F/R/G 触发玩法。距离过远、观察视角切换或 NPC 消失时退出。NPC 处理狭窄通道时可能暂不能交谈。
 - 各 NPC 独立保存近期消息（最多 16 条）及长期记忆。结束时异步总结，严格校验 NPC、会话编号和字段后落盘。
 - 网络错误恢复输入；关闭后延迟回复不会恢复旧会话。总结失败保留待总结记录，重新交谈时重试，也可调用 RetryPendingSummaries。待总结记录最多 32 条消息，超过后保留最近部分。
-- 插件支持自定义三层人设。森林居民目前只有基础性格，没有编造的身世、秘密、任务奖励，也没有配置熟悉度升级关键词。剧情层级由作者设定或调用权威进度接口；熟悉度接口不回退。
+- 2026-10-07-05 更正接入：森林女巫（forest_witch）继承 novelist，Natta（natta）继承 blacksmith，Fawnia（fawnia）继承 operator 的完整插件人设，包括语气、日常状态、背景、三层提示和升级关键词；保留场景名字和独立记忆 ID。发送有效玩家消息前执行关键词升级，优先匹配第三级，允许从一级直升三级，只升不降并落盘；本次回复使用升级后的层级。
 - 原卡牌、委托、合成评估接口保留。本批接入范围是 NPC 对话，不表示所有委托玩法已连接场景。
 
 ## 应用与体验
@@ -38,7 +38,7 @@ ForestNPCDialogueSubsystem 提供 BeginConversation、SendPlayerMessage、EndCon
 
 DialogueMemoryTableSubsystem 支持只读快照、CSV 导出。森林人设目前在 ForestNPCDialogueSubsystem::RegisterForestPersonas 中配置。
 
-## 本次实测
+## 原批次 2026-10-07-03 实测（不代表后续修改已实测）
 
 使用独立槽 ForestNPCConversations_IntegrationTest / DialogueMemoryLedger_IntegrationTest，未将测试内容写入玩家默认记忆。
 
@@ -63,3 +63,7 @@ DialogueMemoryTableSubsystem 支持只读快照、CSV 导出。森林人设目�
 ## 回退
 
 源码、插件、Build.cs、地图须配套恢复。完整工程源码配置备份在本机 Saved/RouteDesign/BackupBeforeDialogueIntegration。清理测试槽不影响默认玩家记忆；清空默认槽前先备份。
+
+## 2026-10-07-05 核对
+
+完整人设映射与桌面原型升级关键词已静态核对；插件包检查及源码差异检查通过。本次未运行 UE 编译、PIE 或真实 AI，请在完整工程中合并源码后编译验证。离线模式只验证升级与存档，不生成对应人设的智能回复。

@@ -34,21 +34,15 @@ void UForestNPCDialogueSubsystem::RegisterForestPersonas()
 {
  auto* Gameplay=GetGameInstance()->GetSubsystem<UAlchemyGameplaySubsystem>();
  const TArray<FName> Ids={TEXT("forest_witch"),TEXT("natta"),TEXT("fawnia")};
+ const TArray<FName> SourceIds={TEXT("novelist"),TEXT("blacksmith"),TEXT("operator")};
  const TArray<FString> Names={TEXT("森林女巫"),TEXT("Natta"),TEXT("Fawnia")};
- const TArray<FString> Voices={TEXT("温和、沉稳，用简短自然的话交流，熟悉森林草药。"),TEXT("爽朗、直接，喜欢沿森林道路探索，乐于给旅行者指路。"),TEXT("安静、细腻，关心森林植物，表达克制自然。")};
  for(int32 I=0;I<Ids.Num();++I)
  {
-  FDialoguePersonaProfile P;P.PersonaId=Ids[I];P.Name=Names[I];P.Title=TEXT("森林居民");P.VoiceTone=Voices[I];
-  P.DailyState=TEXT("正在森林道路上散步，被旅行者叫住。对当前场景里未经游戏确认的事件不作肯定判断。");
-  for(int32 Level=1;Level<=3;++Level)
-  {
-   FDialoguePersonaLayer L;L.FamiliarityLevel=Level;L.bUnlockedByDefault=Level==1;
-   L.Summary=Level==1?TEXT("初识"):Level==2?TEXT("熟悉"):TEXT("信任");L.Title=L.Summary;
-   L.Prompt=FString::Printf(TEXT("当前关系：%s。承接记忆中已确认的对话，不能编造重大身世、任务奖励或未设定的秘密。不得冒充其他 NPC。"),*L.Summary);
-   // No invented secret unlocks. Designers may register authored layers later.
-   P.Layers.Add(L);
-  }
-  Gameplay->RegisterPersonaProfile(P);
+  FDialoguePersonaProfile Profile;
+  if(!Gameplay->GetPersonaProfile(SourceIds[I],Profile))continue;
+  // Keep the scene identity and separate memory while inheriting the complete authored persona.
+  Profile.PersonaId=Ids[I];Profile.Name=Names[I];
+  Gameplay->RegisterPersonaProfile(Profile);
  }
 }
 bool UForestNPCDialogueSubsystem::ConfigurePersistence(const FString& ConversationSlot,const FString& MemorySlot)
@@ -106,6 +100,13 @@ bool UForestNPCDialogueSubsystem::SendPlayerMessage(const FString& Raw)
  const FString Text=Raw.TrimStartAndEnd();if(ActiveNpc.IsNone() || bWaiting || Text.IsEmpty() || Text.Len()>500)return false;
  auto* AI=GetGameInstance()->GetSubsystem<UDialogueAIServiceSubsystem>();
  if(!bOfflineTest && !AI->HasApiKey()){Status=TEXT("未配置 FOREST_DIALOGUE_API_KEY。设置后重新启动 UE；或在场景管理器启用离线联调。");OnConversationUpdated.Broadcast();return false;}
+ auto* Gameplay=GetGameInstance()->GetSubsystem<UAlchemyGameplaySubsystem>();
+ int64 KnownSecretFlags=0;
+ for(const auto& State:GetGameInstance()->GetSubsystem<UDialogueMemoryTableSubsystem>()->GetLedgerSnapshot().NpcStates)
+  if(State.NpcId==ActiveNpc){KnownSecretFlags=State.KnownSecretFlags;break;}
+ int32 NewFamiliarity=1,TriggeredLayer=0;FString ProgressError;
+ if(!Gameplay || !Gameplay->AdvancePersonaFromPlayerText(ActiveNpc,Text,KnownSecretFlags,0,true,NewFamiliarity,TriggeredLayer,ProgressError))
+ {Status=ProgressError.IsEmpty()?TEXT("熟悉度更新失败，请稍后重试"):ProgressError;OnConversationUpdated.Broadcast();return false;}
  auto& R=Row(ActiveNpc);const auto M=ForestDialogue::Message(TEXT("user"),Text);R.History.Add(M);SessionTranscript.Add(M);bWaiting=true;Status=TEXT("对方正在回答…");Persist();OnConversationUpdated.Broadcast();
  if(bOfflineTest)
  {auto* Context=NewObject<UForestDialogueRequestContext>(this);Context->Owner=this;Context->NpcId=ActiveNpc;Context->Generation=Generation;Requests.Add(Context);HandleResponse(Context,true,OfflineReply(Text));return true;}
