@@ -2,11 +2,20 @@
 
 本文件记录增量仓库每次提交上传的内容。最新更新放在最前面；每次上传前必须把本条记录与对应文件一起提交。验证状态应区分“本次验证”“历史记录”与“未验证”。
 
+## 2026-10-07-02：补记 NPC 更新上传结果
+
+- **目的 / 文件范围**：仅更新 `CHANGELOG.md`，记录功能批次 `2026-10-07-01` 的 GitHub 发布结果；本条随上传核对文档提交发布。
+- **基线 / 前置批次**：`2026-10-07-01`，功能提交 [c7ce5e8](https://github.com/daddongoba/MagicForest/commit/c7ce5e8b275a20ce18e89f520277f17da6c8bc5a)。
+- **核对结果**：Git 推送成功，Git LFS 报告 1/1 对象、157 MB 上传完成；远程 main SHA 与本地功能提交均为 `c7ce5e8b275a20ce18e89f520277f17da6c8bc5a`。
+- **整理检查**：24 个增量文件的资产与源文件已比对；地图 LFS SHA256 与文件一致；凭据/生成文件扫描无发现，`git diff --cached --check` 通过。
+- **应用 / 未验证项**：无新增游戏文件，功能与验证限制沿用前置批次。未从另一台机器重新下载 LFS 或运行打包验证。
+- **回退**：只影响上传记录，不改变工程功能。
+
 ## 2026-10-07-01：NPC 道路漫游、相遇交互与步行修正
 
 - **目的**：让三个 NPC 持续在道路上活动，玩家能够遇见或寻找并交谈；不可达路线自动换路。取代七目的地固定巡逻。
 - **基线 / 前置更新**：demo3_UE58 1.5 完整工程，UE 5.8.3 Windows；增量基线 main `5e81998`，沿用 `2026-10-06-01` NPC 和 `2026-10-06-05` 既有更新。
-- **上传状态**：待上传；提交准备阶段，远程核对完成后补记。
+- **上传状态**：已上传到 [daddongoba/MagicForest](https://github.com/daddongoba/MagicForest) 的 `main`；功能提交 [c7ce5e8](https://github.com/daddongoba/MagicForest/commit/c7ce5e8b275a20ce18e89f520277f17da6c8bc5a)，Git LFS 关卡上传成功，远程 SHA 已核对。
 - **新增文件**：`Source/demo3_UE58/ForestRoadAIController.{h,cpp}`、`ForestCrouchNavigation.{h,cpp}`、`ForestNPCInteraction.{h,cpp}`、`ForestRoadTestCamera.{h,cpp}`、`ForestNPCSetupLibrary.{h,cpp}`；`Content/NPC/Navigation/SM_Log_NPCCollision.uasset`、`SM_Portal_NPCCollision.uasset`；`.gitattributes`；`Docs/NPC更新应用说明_2026-10-07.md`、`Docs/NPC_FreeRoaming_Interaction.md`、`Docs/NPC_Camera_Test.md`。
 - **关卡新增入库**：`Content/Biomes/PNB_Enchanted_Forest/Map/Demo_Day.umap` 是完整工程已有但本次修改的关卡，约 157 MB，使用 Git LFS。包含用户编辑的道路、三 NPC、交互管理器、跟随相机和小物件碰撞修改。
 - **修改文件**：`Content/NPC/AI/BP_NPC_WanderTest.uasset`、`BP_NPC_Natta_Wander.uasset`、`BP_NPC_Fawnia_Wander.uasset`；`Source/demo3_UE58/demo3_UE58.Build.cs`；`Config/DefaultEngine.ini`；`README.md`；本更新记录。
