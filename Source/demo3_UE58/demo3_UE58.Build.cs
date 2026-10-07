@@ -12,7 +12,8 @@ public class demo3_UE58 : ModuleRules
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 		PrivateDependencyModuleNames.Add("AnimGraphRuntime");
-		PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
+		PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore", "Json", "JsonUtilities", "Projects" });
+		PublicDependencyModuleNames.Add("DialogueMemoryTable");
 		if (Target.bBuildEditor)
 		{
 			PrivateDependencyModuleNames.AddRange(new string[] { "UnrealEd", "AnimGraph", "BlueprintGraph" });

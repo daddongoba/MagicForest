@@ -6,7 +6,7 @@
   "required": ["schema_version", "npc_id", "session_id", "npc_patch", "fact_upserts", "world_suggestions", "open_loop_upserts"],
   "properties": {
     "schema_version": { "const": 1 },
-    "npc_id": { "type": "string", "enum": ["blacksmith", "operator", "novelist"] },
+    "npc_id": { "type": "string", "pattern": "^[a-z0-9_.-]{1,32}$" },
     "session_id": { "type": "integer", "minimum": 1 },
     "npc_patch": {
       "type": "object",

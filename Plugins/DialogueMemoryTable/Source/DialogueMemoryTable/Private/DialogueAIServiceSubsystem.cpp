@@ -73,15 +73,17 @@ void UDialogueAIServiceSubsystem::RequestChatCompletion(
     Request->SetHeader(TEXT("Content-Type"), TEXT("application/json"));
     Request->SetHeader(TEXT("Authorization"), FString::Printf(TEXT("Bearer %s"), *ApiKey));
     Request->SetContentAsString(Body);
+    Request->SetTimeout(35.f);
+    const TWeakObjectPtr<UDialogueAIServiceSubsystem> WeakThis(this);
     Request->OnProcessRequestComplete().BindLambda(
-        [Callback, this](
+        [Callback, WeakThis](
             FHttpRequestPtr,
             FHttpResponsePtr Response,
             const bool bWasSuccessful)
         {
-            CompleteRequest(Response, bWasSuccessful, Callback);
+            if(WeakThis.IsValid())WeakThis->CompleteRequest(Response, bWasSuccessful, Callback);
         });
-    Request->ProcessRequest();
+    if(!Request->ProcessRequest())Callback.ExecuteIfBound(false,TEXT("无法启动 AI 请求。"));
 }
 
 void UDialogueAIServiceSubsystem::RequestNpcDialogue(
@@ -110,9 +112,9 @@ void UDialogueAIServiceSubsystem::RequestNpcDialogue(
         DialogueHistory);
     Messages.Add(SystemMessage);
 
-    for (const FDialogueMessage& Message : DialogueHistory)
+    for (int32 Index=FMath::Max(0,DialogueHistory.Num()-16);Index<DialogueHistory.Num();++Index)
     {
-        Messages.Add(Message);
+        Messages.Add(DialogueHistory[Index]);
     }
 
     RequestChatCompletion(Messages, 0.85f, 400, Callback);
@@ -190,7 +192,5 @@ void UDialogueAIServiceSubsystem::CompleteRequest(
         return;
     }
 
-    Content.ReplaceInline(TEXT("（"), TEXT(""));
-    Content.ReplaceInline(TEXT("）"), TEXT(""));
     Callback.ExecuteIfBound(true, Content.TrimStartAndEnd());
 }

@@ -1,4 +1,5 @@
 #include "DialogueMemoryTableSubsystem.h"
+#include "AlchemyGameplaySubsystem.h"
 
 #include "Dom/JsonObject.h"
 #include "HAL/FileManager.h"
@@ -652,7 +653,9 @@ FDialogueMemoryApplyResult UDialogueMemoryTableSubsystem::ApplyMemoryPatchJson(
         return ErrorResult(TEXT("npc_mismatch"), TEXT("Patch npc_id does not match the active conversation."));
     }
 
-    if (NpcIdString != TEXT("blacksmith") && NpcIdString != TEXT("operator") && NpcIdString != TEXT("novelist"))
+    const auto* Personas=GetGameInstance()->GetSubsystem<UAlchemyGameplaySubsystem>();
+    FDialoguePersonaProfile Profile;
+    if (!Personas || !Personas->GetPersonaProfile(PatchNpcId,Profile))
     {
         return ErrorResult(TEXT("unknown_npc"), TEXT("npc_id is not in the supported persona set."));
     }
@@ -1087,7 +1090,7 @@ bool UDialogueMemoryTableSubsystem::SetAuthoritativeNpcProgress(
         State = &Working->NpcStates.Last();
     }
 
-    State->Familiarity = FMath::Clamp(Familiarity, 1, 3);
+    State->Familiarity = FMath::Max(State->Familiarity,FMath::Clamp(Familiarity, 1, 3));
     State->KnownSecretFlags = KnownSecretFlags;
     State->LastWorldDay = FMath::Max(0, WorldDay);
 

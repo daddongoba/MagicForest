@@ -2,27 +2,35 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Blueprint/UserWidget.h"
+#include "Types/SlateEnums.h"
 #include "ForestNPCInteraction.generated.h"
-class UTextBlock;
-class ACharacter;
-class APlayerController;
-class AForestRoadAIController;
-
+class UTextBlock;class UEditableTextBox;class UButton;class UScrollBox;class UVerticalBox;
+class ACharacter;class APlayerController;class AForestRoadAIController;class AForestNPCInteraction;class UForestNPCDialogueSubsystem;
 UCLASS()
 class DEMO3_UE58_API UForestNPCInteractionWidget : public UUserWidget
 {
  GENERATED_BODY()
 public:
+ TWeakObjectPtr<AForestNPCInteraction> Manager;
  void ShowMessage(const FString& Name,const FString& Body,const FString& Hint);
+ void ShowConversation(const FString& Name,const FString& Body,const FString& Status,bool Waiting);
+ void FocusInput();
 protected:
  virtual TSharedRef<SWidget> RebuildWidget() override;
+ virtual FReply NativeOnPreviewKeyDown(const FGeometry& Geometry,const FKeyEvent& Event) override;
 private:
  UPROPERTY(Transient) TObjectPtr<UTextBlock> Title;
  UPROPERTY(Transient) TObjectPtr<UTextBlock> Message;
  UPROPERTY(Transient) TObjectPtr<UTextBlock> Prompt;
+ UPROPERTY(Transient) TObjectPtr<UEditableTextBox> Input;
+ UPROPERTY(Transient) TObjectPtr<UButton> Send;
+ UPROPERTY(Transient) TObjectPtr<UButton> Close;
+ UPROPERTY(Transient) TObjectPtr<UScrollBox> Scroll;
+ UPROPERTY(Transient) TObjectPtr<UVerticalBox> Conversation;
+ UFUNCTION() void SendClicked();
+ UFUNCTION() void CloseClicked();
+ UFUNCTION() void TextCommitted(const FText& Text,ETextCommit::Type Method);
 };
-
-/** A small usable encounter interaction; dialogue systems can use the controller event. */
 UCLASS(Blueprintable)
 class DEMO3_UE58_API AForestNPCInteraction : public AActor
 {
@@ -31,17 +39,24 @@ public:
  AForestNPCInteraction();
  virtual void Tick(float DT) override;
  UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="NPC Interaction") float InteractionRange=250;
- UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="NPC Interaction") FText Greeting=FText::FromString(TEXT("你好，旅行者。很高兴在森林里遇见你。"));
+ UPROPERTY(EditAnywhere,BlueprintReadWrite,Category="NPC Dialogue") bool bOfflineTestMode=false;
  UFUNCTION(BlueprintCallable,Category="NPC Interaction") bool TryInteractWith(ACharacter* Character);
  UFUNCTION(BlueprintCallable,Category="NPC Interaction") void FinishInteraction();
- UFUNCTION(BlueprintPure,Category="NPC Interaction") bool IsDialogueOpen() const {return Active.IsValid();}
+ UFUNCTION(BlueprintCallable,Category="NPC Dialogue") bool SubmitDialogueText(const FString& Text);
+ UFUNCTION(BlueprintPure,Category="NPC Interaction") bool IsDialogueOpen() const{return Active.IsValid();}
+ UFUNCTION(BlueprintPure,Category="NPC Dialogue") FString GetDialogueStatus() const;
 protected:
  virtual void EndPlay(const EEndPlayReason::Type Reason) override;
 private:
  TWeakObjectPtr<APlayerController> Player;
  TWeakObjectPtr<AForestRoadAIController> Active;
+ TWeakObjectPtr<ACharacter> Nearby;
  UPROPERTY(Transient) TObjectPtr<UForestNPCInteractionWidget> Widget;
- bool bLockedMovement=false;
+ UPROPERTY(Transient) TObjectPtr<UForestNPCDialogueSubsystem> Dialogue;
+ bool bLockedMovement=false,bPreviousMouse=false,bSuppressInteractUntilRelease=false,bInputBound=false;
  bool CanReach(ACharacter* Character) const;
  FString CharacterName(const ACharacter* Character) const;
+ FName PersonaId(const ACharacter* Character) const;
+ UFUNCTION() void RefreshConversation();
+ UFUNCTION() void InteractNearby();
 };

@@ -83,3 +83,7 @@ Run the dependency-free check from the plugin root:
 It verifies the descriptor, example JSON, runtime contract, and C++ delimiter
 structure. It does not replace compiling the plugin with Unreal Build Tool in
 the target project.
+
+## Forest NPC integration (2026-10-07)
+
+Custom three-layer profiles can be installed with RegisterPersonaProfile. Memory patches validate against registered profiles, including the original three personas. MagicForest registers forest_witch, natta and fawnia and owns the dialogue UI, request lifecycle and conversation saves. See [integration and test report](../../Docs/NPC_Dialogue_Integration_2026-10-07.md).

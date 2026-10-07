@@ -11,6 +11,8 @@ class DIALOGUEMEMORYTABLE_API UAlchemyGameplaySubsystem : public UGameInstanceSu
     GENERATED_BODY()
 
 public:
+    UFUNCTION(BlueprintCallable, Category = "Alchemy|Personas")
+    bool RegisterPersonaProfile(const FDialoguePersonaProfile& Profile);
     UFUNCTION(BlueprintPure, Category = "Alchemy|Personas")
     TArray<FName> GetPersonaIds() const;
 
@@ -72,6 +74,7 @@ public:
         const FString& CompactMemoryJson) const;
 
 private:
+    UPROPERTY(Transient) TMap<FName, FDialoguePersonaProfile> CustomPersonas;
     static FDialoguePersonaProfile MakeBlacksmithProfile();
     static FDialoguePersonaProfile MakeOperatorProfile();
     static FDialoguePersonaProfile MakeNovelistProfile();

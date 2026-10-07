@@ -2,6 +2,19 @@
 
 本文件记录增量仓库每次提交上传的内容。最新更新放在最前面；每次上传前必须把本条记录与对应文件一起提交。验证状态应区分“本次验证”“历史记录”与“未验证”。
 
+## 2026-10-07-03：森林 NPC 对话、独立记忆与故障恢复
+
+- **目标 / 基线**：DialogueMemoryTable 安装到完整工程并接入三个森林 NPC；demo3_UE58 1.5，UE 5.8.3 Windows，main 67d6097；前置 NPC 批次 2026-10-07-01、插件批次 2026-10-06-05。
+- **上传状态**：待上传；功能与记录同一提交，上传后另核对远程 SHA。
+- **新增**：Source/demo3_UE58/ForestNPCDialogueSubsystem.{h,cpp}；Docs/NPC_Dialogue_Integration_2026-10-07.md。
+- **修改**：Source/demo3_UE58/ForestNPCInteraction.{h,cpp}、demo3_UE58.Build.cs；Plugins/DialogueMemoryTable/Source/DialogueMemoryTable/DialogueMemoryTable.Build.cs、Public/AlchemyGameplaySubsystem.h、Private/AlchemyGameplaySubsystem.cpp、Private/DialogueAIServiceSubsystem.cpp、Private/DialogueMemoryTableSubsystem.cpp；插件 Resources/DialogueMemoryPatch.schema.json、README.md；根 README.md、本记录。
+- **关卡**：Content/Biomes/PNB_Enchanted_Forest/Map/Demo_Day.umap（Git LFS），现有管理器开启离线模拟。本机 uproject 已启用插件，仓库 uproject 原已启用。
+- **功能**：E 交谈、Enter/发送、Esc/结束；暂停和恢复漫游，文字输入隔离；自定义人设、独立历史和长期记忆；JSON 校验、会话幂等、失败总结保存与重试；超时/取消恢复。环境变量配置 DeepSeek 兼容网关，无 Key 不发送。
+- **应用 / 依赖**：合并源码/插件并构建 Editor 模块；地图依赖原完整资源，有个人关卡编辑时可只开启现有 NPC_EncounterInteraction 的 Offline Test Mode。在线设置 FOREST_DIALOGUE_API_KEY 后重启 UE 并取消离线模式。详见 [接入与实测表](Docs/NPC_Dialogue_Integration_2026-10-07.md)。
+- **本次验证**：Editor 编译、三 NPC PIE 离线交谈/记忆/恢复漫游、本机模拟 HTTP 回复/总结、超时与非法响应、取消延迟回复、总结跨 PIE 重试、独立记忆重新加载、无 Key 拒绝、身份/编号/字段校验、熟悉度不回退、Slate 输入/Enter/Esc/按钮/E、插件静态包检查均通过；独立测试槽。
+- **未验证 / 限制**：无真实服务 Key，未验证真实 DeepSeek；未打包、其他平台/多人/长期负载未测。森林人设为基础性格，无升级关键词或剧情秘密。原委托/卡牌接口保留，不表示已接入场景。
+- **范围 / 回退**：不含测试存档、临时 HTTP 服务、缓存、构建产物或令牌。源码/插件/地图配套回退，本机已保留源码配置备份。
+
 ## 2026-10-07-02：补记 NPC 更新上传结果
 
 - **目的 / 文件范围**：仅更新 `CHANGELOG.md`，记录功能批次 `2026-10-07-01` 的 GitHub 发布结果；本条随上传核对文档提交发布。

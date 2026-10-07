@@ -149,11 +149,20 @@ FDialoguePersonaProfile UAlchemyGameplaySubsystem::MakeNovelistProfile()
 
 TArray<FName> UAlchemyGameplaySubsystem::GetPersonaIds() const
 {
-    return { TEXT("blacksmith"), TEXT("operator"), TEXT("novelist") };
+    TArray<FName> Ids={ TEXT("blacksmith"), TEXT("operator"), TEXT("novelist") };
+    for(const auto& Pair:CustomPersonas)Ids.AddUnique(Pair.Key);
+    return Ids;
+}
+
+bool UAlchemyGameplaySubsystem::RegisterPersonaProfile(const FDialoguePersonaProfile& Profile)
+{
+    if(Profile.PersonaId.IsNone() || Profile.Name.IsEmpty() || Profile.Layers.Num()!=3)return false;
+    CustomPersonas.Add(Profile.PersonaId,Profile);return true;
 }
 
 bool UAlchemyGameplaySubsystem::GetPersonaProfile(const FName PersonaId, FDialoguePersonaProfile& OutProfile) const
 {
+    if(const auto* Profile=CustomPersonas.Find(PersonaId)){OutProfile=*Profile;return true;}
     if (PersonaId == TEXT("blacksmith"))
     {
         OutProfile = MakeBlacksmithProfile();
