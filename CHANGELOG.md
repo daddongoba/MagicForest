@@ -10,7 +10,7 @@
 - **文件**：Source/demo3_UE58/ForestNPCDialogueSubsystem.cpp、Docs/NPC_Dialogue_Integration_2026-10-07.md、CHANGELOG.md。
 - **验证 / 限制**：原型关键词与对应内置人设静态比对、插件包检查、差异检查通过；未执行 UE 编译、PIE、真实 API 或打包。沿用现有离线模式与存档槽。
 - **应用 / 回退**：合并源码并编译完整工程；要体验真实人设回复需配置 Key 并关闭离线模式。回退源码不会自动降低已保存熟悉度，需使用应用前存档备份。
-- **上传状态**：待上传。
+- **上传状态**：已上传 main；功能提交 [bf5e5c4](https://github.com/daddongoba/MagicForest/commit/bf5e5c4)，远程分支已核对。
 
 ## 2026-10-07-04：补记 NPC 对话更新上传结果
 
