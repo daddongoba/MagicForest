@@ -2,6 +2,22 @@
 
 本文件记录增量仓库每次提交上传的内容。最新更新放在最前面；每次上传前必须把本条记录与对应文件一起提交。验证状态应区分“本次验证”“历史记录”与“未验证”。
 
+## 2026-10-07-01：NPC 道路漫游、相遇交互与步行修正
+
+- **目的**：让三个 NPC 持续在道路上活动，玩家能够遇见或寻找并交谈；不可达路线自动换路。取代七目的地固定巡逻。
+- **基线 / 前置更新**：demo3_UE58 1.5 完整工程，UE 5.8.3 Windows；增量基线 main `5e81998`，沿用 `2026-10-06-01` NPC 和 `2026-10-06-05` 既有更新。
+- **上传状态**：待上传；提交准备阶段，远程核对完成后补记。
+- **新增文件**：`Source/demo3_UE58/ForestRoadAIController.{h,cpp}`、`ForestCrouchNavigation.{h,cpp}`、`ForestNPCInteraction.{h,cpp}`、`ForestRoadTestCamera.{h,cpp}`、`ForestNPCSetupLibrary.{h,cpp}`；`Content/NPC/Navigation/SM_Log_NPCCollision.uasset`、`SM_Portal_NPCCollision.uasset`；`.gitattributes`；`Docs/NPC更新应用说明_2026-10-07.md`、`Docs/NPC_FreeRoaming_Interaction.md`、`Docs/NPC_Camera_Test.md`。
+- **关卡新增入库**：`Content/Biomes/PNB_Enchanted_Forest/Map/Demo_Day.umap` 是完整工程已有但本次修改的关卡，约 157 MB，使用 Git LFS。包含用户编辑的道路、三 NPC、交互管理器、跟随相机和小物件碰撞修改。
+- **修改文件**：`Content/NPC/AI/BP_NPC_WanderTest.uasset`、`BP_NPC_Natta_Wander.uasset`、`BP_NPC_Fawnia_Wander.uasset`；`Source/demo3_UE58/demo3_UE58.Build.cs`；`Config/DefaultEngine.ini`；`README.md`；本更新记录。
+- **完整工程侧删除操作**：从 Demo_Day 关卡删除 NPC01–NPC07 七个箱子，已体现在关卡文件中；未删除独立资产。旧 Arrival 辅助点保留但不再控制移动。
+- **最终行为**：速度 93.75 cm/s，模型朝向 Yaw=-90，Natta/Fawnia 模型高度 -88 cm；恢复原走路动画并停用实验性下蹲骨骼叠加；小物件对 NPC 放行，大障碍保留碰撞与导航；E 基础交谈，E/Esc 结束；F6/F7/F8/F9 提供 NPC 观察工具。
+- **依赖与应用**：需要匹配完整工程原有模型、动画、场景与玩家资产；先获取 Git LFS 关卡，合并源码和导航/碰撞配置、编译模块，再应用资产和关卡。ECC_GameTraceChannel1 分配给 ForestNPC，已有通道需审查。完整步骤与文件表见 [本批应用说明](Docs/NPC更新应用说明_2026-10-07.md)。既有插件和 uproject 保留。
+- **验证来源**：本开发会话原生模块构建成功，漫游阶段 PIE 确认三 NPC 连续完成路段、基础交互暂停和恢复移动输入。最后的碰撞、朝向、慢步行、删除箱子等在编辑器读取确认并保存；本次上传整理不额外运行游戏测试。
+- **未验证项 / 限制**：最后修正未做完整 PIE 回归或打包；真实下蹲动画、足部 IK、剧情对话尚未接入，E 与原采摘交互的冲突未检查。
+- **发布范围**：只包含上述增量，未包含缓存、Saved、构建产物、调试截图、完整资源包或本机令牌。上传配置保留 SecurityToken 为空。
+- **回退**：完整工程恢复应用前备份，地图、NPC 蓝图、源码与配置须配套回退。
+
 ## 2026-10-06-05：坩埚投料合成（蓝图）与 DialogueMemoryTable 插件入库
 
 - **功能更新范围**：2026-10-06 晚间，玩家走近坩埚后的投料—合成链路；以及一组非本次制作的第三方插件源码入库。

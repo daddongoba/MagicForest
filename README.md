@@ -16,7 +16,7 @@ GitHub 仓库：[daddongoba/MagicForest](https://github.com/daddongoba/MagicFore
 |---|---|
 | `Content/` | 本次纳入的蓝图等二进制资产，保留工程相对路径 |
 | `Config/` | 本次纳入的工程配置；应用时应审查差异 |
-| `Source/` | 首批附带的 C++ 模块参考文件；原清单注明本次未修改 |
+| `Source/` | 首批模块参考文件，以及批次 2026-10-07-01 的 NPC 原生功能源码 |
 | `Plugins/` | 自批次 `2026-10-06-05` 起收录第三方插件源码（`DialogueMemoryTable`）；是否应用取决于该批记录 |
 | `CHANGELOG.md` | 每次更新的入口：内容、文件、依赖、应用方式与验证状态 |
 | `Docs/` | 详细更新说明及历史记录 |
@@ -40,7 +40,7 @@ GitHub 仓库：[daddongoba/MagicForest](https://github.com/daddongoba/MagicFore
 5. 若更新涉及删除、重命名或迁移，按该批记录执行。**仓库中没有某个文件，不代表应从完整工程删除它。**
 6. 打开完整工程，检查资产引用、蓝图编译、启动关卡及功能。涉及源码时重新生成项目文件并编译；涉及导航时按更新说明构建导航。
 
-首批备份没有包含 `Content/Biomes/PNB_Enchanted_Forest/Map/Demo_Day.umap`。该关卡中的 NPC 摆放与导航等状态依赖完整工程已有版本，单独覆盖此仓库的蓝图无法复现所有关卡改动。
+首批备份没有包含 `Content/Biomes/PNB_Enchanted_Forest/Map/Demo_Day.umap`。**批次 2026-10-07-01 已将该关卡纳入 Git LFS**，包含当前 NPC 摆放、道路和碰撞修改；仍需匹配完整工程的原有资源。克隆后运行 `git lfs install` 和 `git lfs pull`，避免把 LFS 文本指针作为地图使用。应用步骤见 [NPC 更新应用说明](Docs/NPC更新应用说明_2026-10-07.md)。
 
 ## 每次更新与上传的记录要求
 
