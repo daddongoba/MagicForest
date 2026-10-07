@@ -2,10 +2,18 @@
 
 本文件记录增量仓库每次提交上传的内容。最新更新放在最前面；每次上传前必须把本条记录与对应文件一起提交。验证状态应区分“本次验证”“历史记录”与“未验证”。
 
+## 2026-10-07-04：补记 NPC 对话更新上传结果
+
+- **文件范围 / 目的**：只更新 CHANGELOG.md，记录功能批次 2026-10-07-03 的发布结果。
+- **基线 / 前置批次**：2026-10-07-03，功能提交 [c4402a3](https://github.com/daddongoba/MagicForest/commit/c4402a37f28553c7ee199a7fb8bf8adfb52711ef)。
+- **核对**：Git 推送成功；Git LFS 1/1、157 MB 上传完成；远程 main 与本地功能提交 SHA 均为 c4402a37f28553c7ee199a7fb8bf8adfb52711ef。
+- **整理检查**：16 个增量文件，源码和关卡与完整工程一致，地图 LFS SHA256 核对，暂存差异检查和凭据/生成文件扫描通过。
+- **应用 / 验证 / 回退**：无新增玩法文件，沿用 2026-10-07-03 的接入步骤和验证限制。本记录随文档维护提交发布，交付时再次核对远程；回退仅影响文档。
+
 ## 2026-10-07-03：森林 NPC 对话、独立记忆与故障恢复
 
 - **目标 / 基线**：DialogueMemoryTable 安装到完整工程并接入三个森林 NPC；demo3_UE58 1.5，UE 5.8.3 Windows，main 67d6097；前置 NPC 批次 2026-10-07-01、插件批次 2026-10-06-05。
-- **上传状态**：待上传；功能与记录同一提交，上传后另核对远程 SHA。
+- **上传状态**：已上传 main，功能提交 [c4402a3](https://github.com/daddongoba/MagicForest/commit/c4402a37f28553c7ee199a7fb8bf8adfb52711ef)，关卡 Git LFS 上传成功，远程 SHA 已核对；见 2026-10-07-04。
 - **新增**：Source/demo3_UE58/ForestNPCDialogueSubsystem.{h,cpp}；Docs/NPC_Dialogue_Integration_2026-10-07.md。
 - **修改**：Source/demo3_UE58/ForestNPCInteraction.{h,cpp}、demo3_UE58.Build.cs；Plugins/DialogueMemoryTable/Source/DialogueMemoryTable/DialogueMemoryTable.Build.cs、Public/AlchemyGameplaySubsystem.h、Private/AlchemyGameplaySubsystem.cpp、Private/DialogueAIServiceSubsystem.cpp、Private/DialogueMemoryTableSubsystem.cpp；插件 Resources/DialogueMemoryPatch.schema.json、README.md；根 README.md、本记录。
 - **关卡**：Content/Biomes/PNB_Enchanted_Forest/Map/Demo_Day.umap（Git LFS），现有管理器开启离线模拟。本机 uproject 已启用插件，仓库 uproject 原已启用。
