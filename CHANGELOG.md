@@ -7,12 +7,8 @@
 - **功能更新范围**：2026-10-06 晚间，玩家走近坩埚后的投料—合成链路；以及一组非本次制作的第三方插件源码入库。
 - **适用基线 / 引擎版本**：`demo3_UE58` 1.5 版完整工程，UE 5.8（历史记录为 5.8.3，macOS / Apple 芯片）。
 - **前置更新**：本仓库批次 `2026-10-06-01`（首批 NPC 游走与采摘功能）；流程约定批次 `2026-10-06-04`。
-- **上传状态**：**待上传，尚未推送至远端**。本地已产生一条包含本批次记录与全部文件的提交（本机 `MagicForest` 仓库 `main` 分支的最新提交，`git log -1 --stat` 可核对）。`git push origin main` 被凭据缺失阻断：本机既无 `gh` CLI，也无 `credential.helper`、`.git-credentials`、`.netrc` 或 SSH 密钥。
-  **后续准备（2026-10-06 23:25）**：已生成 ed25519 密钥 `~/.ssh/id_ed25519`、写入 GitHub 主机指纹，
-  并把本仓库 remote 切到 `git@github.com:daddongoba/MagicForest.git`；`ssh -T git@github.com` 已返回
-  `Permission denied (publickey)`，即**网络与主机校验均正常，仅差把公钥登记到 GitHub**。
-  公钥登记完成后执行 `git push origin main` 即可补传，届时把本条改为“已上传”并补记提交号。
-  **在此之前，本批内容仅在本地仓库。**
+- **上传状态**：已上传至 [daddongoba/MagicForest](https://github.com/daddongoba/MagicForest)，分支 `main`；批次提交 [020c429](https://github.com/daddongoba/MagicForest/commit/020c429bb70351af0689847494b7931bedabcd39)，远程分支已核对。
+- **上传核对（2026-10-07）**：接受仓库协作邀请后，通过 SSH 完成推送；`git ls-remote origin refs/heads/main` 已返回 `020c429bb70351af0689847494b7931bedabcd39`。
   **离线交付与防误推（2026-10-07 00:15 补充）**：
   ① 已导出 `MagicForest_2026-10-06-05.bundle`（167 KB，含本批唯一提交，依赖父提交 `a31dbd5`），
   可在任何具备推送权限的环境中用 `git pull <bundle路径> main` 导入后补推，无需依赖本机凭据；
