@@ -113,9 +113,13 @@ bool UForestNPCDialogueSubsystem::SendPlayerMessage(const FString& Raw)
  if(bOfflineTest)
  {auto* Context=NewObject<UForestDialogueRequestContext>(this);Context->Owner=this;Context->NpcId=ActiveNpc;Context->Generation=Generation;Requests.Add(Context);HandleResponse(Context,true,OfflineReply(Text));return true;}
  int32 Level=1;for(const auto& S:GetGameInstance()->GetSubsystem<UDialogueMemoryTableSubsystem>()->GetLedgerSnapshot().NpcStates)if(S.NpcId==ActiveNpc)Level=S.Familiarity;
+ const FName CommissionPersona=ActiveNpc==TEXT("natta")?TEXT("blacksmith"):ActiveNpc==TEXT("fawnia")?TEXT("operator"):ActiveNpc==TEXT("forest_witch")?TEXT("novelist"):ActiveNpc;
+ const int32 PersonaOffset=CommissionPersona==TEXT("operator")?3:CommissionPersona==TEXT("novelist")?6:CommissionPersona==TEXT("blacksmith")?0:-1;
+ const int32 DaySlot=((FMath::Max(1,WorldDay)-1)%3)+1;
+ const int32 CommissionOrderIndex=PersonaOffset>=0?PersonaOffset+DaySlot:0;
  auto* Context=NewObject<UForestDialogueRequestContext>(this);Context->Owner=this;Context->NpcId=ActiveNpc;Context->Generation=Generation;Requests.Add(Context);
  FDialogueAICompletion Callback;Callback.BindDynamic(Context,&UForestDialogueRequestContext::Completed);
- AI->RequestNpcDialogue(ActiveNpc,Level,0,GetCompactMemoryJson(ActiveNpc),R.History,Callback);return true;
+ AI->RequestNpcDialogue(ActiveNpc,Level,CommissionOrderIndex,GetCompactMemoryJson(ActiveNpc),R.History,Callback);return true;
 }
 FString UForestNPCDialogueSubsystem::OfflineReply(const FString& Text) const
 {

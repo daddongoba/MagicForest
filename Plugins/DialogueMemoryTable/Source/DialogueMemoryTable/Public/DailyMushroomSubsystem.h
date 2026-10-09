@@ -7,7 +7,7 @@
 #include "DailyMushroomSubsystem.generated.h"
 
 USTRUCT(BlueprintType)
-struct DIALOGUEMEMORYTABLE_API FDailyMushroomDefinition
+struct DIALOGUEMEMORYTABLE_API FDailyMushroomCardRow
 {
     GENERATED_BODY()
 
@@ -24,7 +24,22 @@ struct DIALOGUEMEMORYTABLE_API FDailyMushroomDefinition
     bool bAvailable = false;
 
     UPROPERTY(BlueprintReadOnly)
+    FName CardId = NAME_None;
+
+    UPROPERTY(BlueprintReadOnly)
+    EAlchemyElement Element = EAlchemyElement::Fire;
+
+    UPROPERTY(BlueprintReadOnly)
+    int32 PipValue = 1;
+
+    UPROPERTY(BlueprintReadOnly)
     FAlchemyVector Value;
+
+    UPROPERTY(BlueprintReadOnly)
+    int32 Weight = 1;
+
+    UPROPERTY(BlueprintReadOnly)
+    FString Tags;
 };
 
 UCLASS()
@@ -35,6 +50,9 @@ class DIALOGUEMEMORYTABLE_API UDailyMushroomSaveGame : public USaveGame
 public:
     UPROPERTY()
     int32 CurrentDay = 1;
+
+    UPROPERTY()
+    int32 LastConfirmedSynthesisDay = 0;
 };
 
 /** Shared world-day state and deterministic daily mushroom availability/values. */
@@ -53,13 +71,16 @@ public:
     int32 AdvanceDay();
 
     UFUNCTION(BlueprintCallable, Category = "World|Day")
+    bool ConfirmDryPotSynthesis();
+
+    UFUNCTION(BlueprintCallable, Category = "World|Day")
     bool SetCurrentDay(int32 NewDay);
 
     UFUNCTION(BlueprintPure, Category = "World|Mushrooms")
-    TArray<FDailyMushroomDefinition> GetDailyMushrooms() const;
+    TArray<FDailyMushroomCardRow> GetDailyMushrooms() const;
 
     UFUNCTION(BlueprintPure, Category = "World|Mushrooms")
-    bool GetDailyMushroom(FName MushroomId, FDailyMushroomDefinition& OutDefinition) const;
+    bool GetDailyMushroom(FName MushroomId, FDailyMushroomCardRow& OutDefinition) const;
 
     UFUNCTION(BlueprintPure, Category = "World|Mushrooms")
     bool IsMushroomAvailable(FName MushroomId) const;
@@ -88,6 +109,7 @@ private:
 
     bool Persist();
     static const TArray<FName>& MushroomCatalog();
+    static EAlchemyElement MushroomElementForIndex(int32 Index);
     static int32 DailySeed(int32 Day, int32 Index);
-    static FDailyMushroomDefinition MakeDefinition(int32 Day, int32 Index);
+    static FDailyMushroomCardRow MakeDefinition(int32 Day, int32 Index);
 };

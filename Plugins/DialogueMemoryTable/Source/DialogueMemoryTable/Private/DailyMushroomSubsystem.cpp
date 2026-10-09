@@ -55,6 +55,18 @@ int32 UDailyMushroomSubsystem::AdvanceDay()
     return CurrentDay;
 }
 
+bool UDailyMushroomSubsystem::ConfirmDryPotSynthesis()
+{
+    if (!Save)
+    {
+        return false;
+    }
+
+    Save->LastConfirmedSynthesisDay = CurrentDay;
+    CurrentDay = FMath::Max(1, CurrentDay + 1);
+    return Persist();
+}
+
 bool UDailyMushroomSubsystem::SetCurrentDay(const int32 NewDay)
 {
     if (NewDay < 1)
@@ -84,33 +96,52 @@ int32 UDailyMushroomSubsystem::DailySeed(const int32 Day, const int32 Index)
     return FMath::Abs(Day * 92821 + Index * 68917 + 17);
 }
 
-FDailyMushroomDefinition UDailyMushroomSubsystem::MakeDefinition(const int32 Day, const int32 Index)
+EAlchemyElement UDailyMushroomSubsystem::MushroomElementForIndex(const int32 Index)
+{
+    // Element is a property of the mushroom type. Day changes availability and pip value only.
+    static const TArray<EAlchemyElement> Elements = {
+        EAlchemyElement::Fire, EAlchemyElement::Wind, EAlchemyElement::Water,
+        EAlchemyElement::Fire, EAlchemyElement::Wind, EAlchemyElement::Water,
+        EAlchemyElement::Fire, EAlchemyElement::Wind, EAlchemyElement::Water,
+        EAlchemyElement::Fire, EAlchemyElement::Wind, EAlchemyElement::Water,
+        EAlchemyElement::Fire, EAlchemyElement::Wind, EAlchemyElement::Water,
+        EAlchemyElement::Fire, EAlchemyElement::Wind, EAlchemyElement::Water,
+        EAlchemyElement::Fire
+    };
+    return Elements.IsValidIndex(Index) ? Elements[Index] : EAlchemyElement::Fire;
+}
+
+FDailyMushroomCardRow UDailyMushroomSubsystem::MakeDefinition(const int32 Day, const int32 Index)
 {
     const TArray<FName>& Catalog = MushroomCatalog();
-    FDailyMushroomDefinition Definition;
+    FDailyMushroomCardRow Definition;
     if (!Catalog.IsValidIndex(Index))
     {
         return Definition;
     }
 
-    const int32 Seed = DailySeed(Day, Index);
+    FRandomStream Random(DailySeed(Day, Index));
     Definition.MushroomId = Catalog[Index];
     Definition.DisplayName = Catalog[Index].ToString();
     Definition.Day = Day;
-    Definition.bAvailable = (Seed % 17) < 10;
-    Definition.Value.Fire = (Seed / 7) % 9 - 3;
-    Definition.Value.Wind = (Seed / 11) % 9 - 3;
-    Definition.Value.Water = (Seed / 13) % 9 - 3;
-    if (Definition.Value.Fire == 0 && Definition.Value.Wind == 0 && Definition.Value.Water == 0)
+    Definition.bAvailable = Random.RandRange(0, 16) < 10;
+    Definition.CardId = FName(*FString::Printf(TEXT("mushroom_day_%d_%02d"), Day, Index));
+    Definition.Element = MushroomElementForIndex(Index);
+    Definition.PipValue = Random.RandRange(1, 9);
+    Definition.Weight = Random.RandRange(1, 3);
+    Definition.Tags = TEXT("daily_mushroom,small_card");
+    switch (Definition.Element)
     {
-        Definition.Value.Fire = 1;
+    case EAlchemyElement::Fire: Definition.Value.Fire = Definition.PipValue; break;
+    case EAlchemyElement::Wind: Definition.Value.Wind = Definition.PipValue; break;
+    case EAlchemyElement::Water: Definition.Value.Water = Definition.PipValue; break;
     }
     return Definition;
 }
 
-TArray<FDailyMushroomDefinition> UDailyMushroomSubsystem::GetDailyMushrooms() const
+TArray<FDailyMushroomCardRow> UDailyMushroomSubsystem::GetDailyMushrooms() const
 {
-    TArray<FDailyMushroomDefinition> Result;
+    TArray<FDailyMushroomCardRow> Result;
     for (int32 Index = 0; Index < MushroomCatalog().Num(); ++Index)
     {
         Result.Add(MakeDefinition(CurrentDay, Index));
@@ -118,12 +149,12 @@ TArray<FDailyMushroomDefinition> UDailyMushroomSubsystem::GetDailyMushrooms() co
     return Result;
 }
 
-bool UDailyMushroomSubsystem::GetDailyMushroom(const FName MushroomId, FDailyMushroomDefinition& OutDefinition) const
+bool UDailyMushroomSubsystem::GetDailyMushroom(const FName MushroomId, FDailyMushroomCardRow& OutDefinition) const
 {
     const int32 Index = MushroomCatalog().Find(MushroomId);
     if (Index == INDEX_NONE)
     {
-        OutDefinition = FDailyMushroomDefinition();
+        OutDefinition = FDailyMushroomCardRow();
         return false;
     }
     OutDefinition = MakeDefinition(CurrentDay, Index);
@@ -132,13 +163,13 @@ bool UDailyMushroomSubsystem::GetDailyMushroom(const FName MushroomId, FDailyMus
 
 bool UDailyMushroomSubsystem::IsMushroomAvailable(const FName MushroomId) const
 {
-    FDailyMushroomDefinition Definition;
+    FDailyMushroomCardRow Definition;
     return GetDailyMushroom(MushroomId, Definition) && Definition.bAvailable;
 }
 
 bool UDailyMushroomSubsystem::GetMushroomValue(const FName MushroomId, FAlchemyVector& OutValue) const
 {
-    FDailyMushroomDefinition Definition;
+    FDailyMushroomCardRow Definition;
     if (!GetDailyMushroom(MushroomId, Definition))
     {
         OutValue = FAlchemyVector();
@@ -151,7 +182,7 @@ bool UDailyMushroomSubsystem::GetMushroomValue(const FName MushroomId, FAlchemyV
 FString UDailyMushroomSubsystem::GetDayStatusText() const
 {
     int32 AvailableCount = 0;
-    for (const FDailyMushroomDefinition& Definition : GetDailyMushrooms())
+    for (const FDailyMushroomCardRow& Definition : GetDailyMushrooms())
     {
         AvailableCount += Definition.bAvailable ? 1 : 0;
     }

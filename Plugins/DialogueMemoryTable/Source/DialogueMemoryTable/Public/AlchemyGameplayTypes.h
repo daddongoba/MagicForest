@@ -119,6 +119,9 @@ struct DIALOGUEMEMORYTABLE_API FAlchemyCommissionDefinition
     FString Wish;
 
     UPROPERTY(BlueprintReadOnly)
+    FString ElementRequest;
+
+    UPROPERTY(BlueprintReadOnly)
     FString SensoryPrompt;
 
     UPROPERTY(BlueprintReadOnly)
@@ -216,6 +219,14 @@ struct DIALOGUEMEMORYTABLE_API FDialoguePersonaLayer
 
     UPROPERTY(BlueprintReadOnly)
     TArray<FString> TriggerKeywords;
+
+    /** Stage-2 conversation subjects already established by the commission or NPC. */
+    UPROPERTY(BlueprintReadOnly)
+    TArray<FString> TriggerTopicKeywords;
+
+    /** Natural follow-up intent; a topic and an intent must both match. */
+    UPROPERTY(BlueprintReadOnly)
+    TArray<FString> TriggerIntentKeywords;
 
     UPROPERTY(BlueprintReadOnly)
     bool bUnlockedByDefault = false;

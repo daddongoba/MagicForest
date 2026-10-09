@@ -2,6 +2,18 @@
 
 本文件记录增量仓库每次提交上传的内容。最新更新放在最前面；每次上传前必须把本条记录与对应文件一起提交。验证状态应区分“本次验证”“历史记录”与“未验证”。
 
+## 2026-10-09-02：干锅确认换天、蘑菇小牌表与元素叙事
+
+- **目的 / 基线**：把每日蘑菇绑定为火/风/水三种小牌元素，点数由本地随机数生成 1–9；干锅合成结果确认后进入下一天；NPC 委托叙事改用元素药性。基于 main `231c5ed`。
+- **修改**：`Plugins/DialogueMemoryTable/Source/DialogueMemoryTable/Public/DailyMushroomSubsystem.h`、`Private/DailyMushroomSubsystem.cpp`、`Public/AlchemyGameplayTypes.h`、`Private/AlchemyGameplaySubsystem.cpp`；`Plugins/DialogueMemoryTable/README.md`；`Docs/DailyMushroomSystem_2026-10-09.md`。
+- **行为**：每日蘑菇表行包含 `CardId`、`Element`、`PipValue`、`Value`、`Weight`、`Tags`，便于后续增加条件字段；蘑菇类型固定元素，天数只改变可用状态、1–9 点数和权重；`ConfirmDryPotSynthesis` 是换天入口；NPC Prompt 和委托 `ElementRequest` 使用火、风、水描述，不把牌当作世界实体。
+- **验证 / 未完成**：静态检查待执行；未在 UE 5.8 编译，未把 `BP_FirstPersonCharacter` 的干锅确认和采摘节点接到新接口，未做 PIE 换天回归。
+- **上传状态**：待上传。
+
+## 2026-10-09-01：上传状态更正
+
+- **更正**：每日蘑菇接口已由提交 [231c5ed](https://github.com/daddongoba/MagicForest/commit/231c5ed3c9b2436185fd1dda703a28d377416401) 上传到 `main`，远程 SHA 已核对。
+
 ## 2026-10-09-01：全局天状态与每日蘑菇数值接口
 
 - **目的 / 基线**：为 demo3_UE58 1.5 增加可保存的全局“天”，让蘑菇可采摘集合和绑定的火/风/水数值按天稳定变化；基于 main `f6463a4`。
@@ -10,7 +22,7 @@
 - **行为**：`WorldDayState` 保存当前天；`AdvanceDay` / `SetCurrentDay` 管理日期；19 种现有基础蘑菇每天得到稳定的可采摘状态和 `FAlchemyVector` 数值；NPC 记忆写入使用同一世界日。
 - **原型核对**：桌面原型包含 22 张大牌、4 张宫廷牌、9 个委托和三轴数值，但没有每日蘑菇表；原型小牌目前由委托必需牌加随机 1–8 小牌生成。
 - **验证 / 未完成**：插件静态包检查和差异检查待执行；未在 UE 5.8 编译，未修改二进制采摘蓝图，未完成蓝图接线、换天刷新和 PIE 验证。完整接线步骤见 [每日蘑菇系统说明](DailyMushroomSystem_2026-10-09.md)。
-- **上传状态**：待上传。
+- **上传状态**：已上传 main，功能提交 [231c5ed](https://github.com/daddongoba/MagicForest/commit/231c5ed3c9b2436185fd1dda703a28d377416401)，远程分支已核对；本次叙事与换天修改另记于 2026-10-09-02。
 
 ## 2026-10-07-05：绑定完整 AI 人设与自动熟悉度升级
 

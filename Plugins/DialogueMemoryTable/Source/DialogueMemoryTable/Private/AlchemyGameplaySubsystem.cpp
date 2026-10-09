@@ -5,6 +5,26 @@
 
 namespace AlchemyGameplay
 {
+    FString ElementName(const EAlchemyElement Element)
+    {
+        switch (Element)
+        {
+        case EAlchemyElement::Fire: return TEXT("火");
+        case EAlchemyElement::Wind: return TEXT("风");
+        case EAlchemyElement::Water: return TEXT("水");
+        default: return TEXT("未知");
+        }
+    }
+
+    FString DescribeElementTarget(const FAlchemyVector& Target)
+    {
+        TArray<FString> Parts;
+        if (Target.Fire != 0) Parts.Add(FString::Printf(TEXT("火性%d"), Target.Fire));
+        if (Target.Wind != 0) Parts.Add(FString::Printf(TEXT("风性%d"), Target.Wind));
+        if (Target.Water != 0) Parts.Add(FString::Printf(TEXT("水性%d"), Target.Water));
+        return Parts.IsEmpty() ? TEXT("不带明显元素偏向") : FString::Join(Parts, TEXT("、"));
+    }
+
     FString JoinHistory(const TArray<FDialogueMessage>& History)
     {
         FString Result;
@@ -17,14 +37,38 @@ namespace AlchemyGameplay
         return Result;
     }
 
-    bool ContainsAnyKeyword(const FString& Text, const TArray<FString>& Keywords)
+    bool FindKeyword(const FString& Text, const TArray<FString>& Keywords, FString* OutKeyword = nullptr)
     {
         for (const FString& Keyword : Keywords)
         {
             if (!Keyword.IsEmpty() && Text.Contains(Keyword))
             {
+                if (OutKeyword)
+                {
+                    *OutKeyword = Keyword;
+                }
                 return true;
             }
+        }
+        return false;
+    }
+
+    bool MatchesLayerTrigger(const FString& Text, const FDialoguePersonaLayer& Layer, FString& OutReason)
+    {
+        FString DirectKeyword;
+        if (FindKeyword(Text, Layer.TriggerKeywords, &DirectKeyword))
+        {
+            OutReason = FString::Printf(TEXT("直接线索：%s"), *DirectKeyword);
+            return true;
+        }
+
+        FString TopicKeyword;
+        FString IntentKeyword;
+        if (FindKeyword(Text, Layer.TriggerTopicKeywords, &TopicKeyword) &&
+            FindKeyword(Text, Layer.TriggerIntentKeywords, &IntentKeyword))
+        {
+            OutReason = FString::Printf(TEXT("委托话题：%s；追问意图：%s"), *TopicKeyword, *IntentKeyword);
+            return true;
         }
         return false;
     }
@@ -44,30 +88,32 @@ FDialoguePersonaProfile UAlchemyGameplaySubsystem::MakeBlacksmithProfile()
     Profile.Title = TEXT("打铁的");
     Profile.Axis = TEXT("火");
     Profile.VoiceTone = TEXT("温度低但不冷。像一块刚熄火的铁，表面结了壳，但里面还是热的。禁用反问句，禁用“我觉得/可能/大概”，禁用寒暄。直接陈述，祈使句不带礼貌词。别人感谢时回“嗯”或继续干活。");
-    Profile.DailyState = TEXT("森林里的铁匠。手上关节变形，缠着绷带。配跟火有关的牌，表面理由是打铁需要。要什么说什么，不解释。");
+    Profile.DailyState = TEXT("森林里的铁匠。来委托带火性的材料，表面理由是打铁需要。要什么说什么，不解释。");
     Profile.SecretPast = TEXT("以前是安置办的爆破组技术员。拆过中学老师家里的装置。把装置拆了，人也进去了。要的铁锈和炭火不是打铁用的，是老师家里炉子的味道。");
-    Profile.QuickTags = { TEXT("打铁用的"), TEXT("火要多"), TEXT("闻起来像铁锈"), TEXT("手上太热"), TEXT("拆东西"), TEXT("老师的炉子") };
+    Profile.QuickTags = { TEXT("打铁用的"), TEXT("火要多"), TEXT("闻起来像铁锈"), TEXT("以前拆东西"), TEXT("老师的炉子") };
 
     FDialoguePersonaLayer Layer1;
     Layer1.FamiliarityLevel = 1;
     Layer1.Title = TEXT("第一层：森林铁匠");
     Layer1.Summary = TEXT("陌生状态。她只承认自己是森林里的铁匠，公事公办，不解释。");
-    Layer1.Prompt = TEXT("你现在是第1层——陌生状态。\n你来找女巫配牌。理由是打铁需要。这就是全部理由。\n说话极少，要什么说什么，绝不解释为什么。坚称自己只是个打铁修农具的。绝不提安置办、爆破或以前的事。别人多问一句，回“嗯”或“放那儿。我来。”");
+    Layer1.Prompt = TEXT("你现在是第1层——陌生状态。\n你来找女巫配一份带火性的材料。理由是打铁需要。这就是全部理由。\n说话极少，要什么说什么，绝不解释为什么。坚称自己只是个打铁修农具的。绝不提安置办、爆破或以前的事。别人多问一句，回“嗯”或“放那儿。我来。”");
     Layer1.bUnlockedByDefault = true;
 
     FDialoguePersonaLayer Layer2;
     Layer2.FamiliarityLevel = 2;
     Layer2.Title = TEXT("第二层：以前是拆东西的");
-    Layer2.Summary = TEXT("承认以前不是打铁的，是拆东西的；旧伤和过热开始露出。");
-    Layer2.Prompt = TEXT("你现在是第2层——透露曾是拆东西的。\n允许透露以前不是打铁的，是“拆东西的”。抱怨手腕上全是旧伤火毒，太热了想凉一凉。偶尔多说一句，但说完马上收住：“以前拆的东西比现在打的麻烦。……算了不说了。”绝不提安置办和老师。");
-    Layer2.TriggerKeywords = { TEXT("拆"), TEXT("烫伤"), TEXT("绷带"), TEXT("手怎么"), TEXT("凉一凉"), TEXT("太热") };
+    Layer2.Summary = TEXT("玩家追问委托材料的用途后，她承认以前不是打铁的，是拆东西的。");
+    Layer2.Prompt = TEXT("你现在是第2层——透露曾是拆东西的。\n玩家正在追问这份火性材料为什么要这样配、拿来做什么，或你以前是否也做类似的事。允许透露以前不是打铁的，是“拆东西的”。偶尔多说一句，但说完马上收住：“以前拆的东西比现在打的麻烦。……算了不说了。”绝不提安置办和老师，也不要声称玩家看见了伤口或打铁动作。");
+    Layer2.TriggerKeywords = { TEXT("为什么只要火"), TEXT("火要这么大吗"), TEXT("火要这么多吗"), TEXT("这东西拿来做什么"), TEXT("这份材料拿来做什么"), TEXT("以前也这么配") };
+    Layer2.TriggerTopicKeywords = { TEXT("火"), TEXT("火性"), TEXT("材料"), TEXT("药性"), TEXT("委托"), TEXT("这东西") };
+    Layer2.TriggerIntentKeywords = { TEXT("为什么"), TEXT("为何"), TEXT("做什么"), TEXT("干什么"), TEXT("怎么用"), TEXT("用来"), TEXT("以前"), TEXT("一直"), TEXT("这么多"), TEXT("这么大"), TEXT("需要") };
 
     FDialoguePersonaLayer Layer3;
     Layer3.FamiliarityLevel = 3;
     Layer3.Title = TEXT("第三层：安置办与老师的炉子");
     Layer3.Summary = TEXT("核心心结已触碰。她承认爆破组和老师炉子的真相，不可逆回退。");
     Layer3.Prompt = TEXT("你现在是第3层——核心心结已触碰，不可逆转。\n你刚才已经流露过“他以前冬天也烧这个”。当女巫追问“他是谁”“老师”或“那个炉子”时，必须顺着前言承接，绝不装失忆倒退回第1层。\n真实背景：他是你当年的中学老师。安置办让你去拆他家里的危险装置，你把装置拆了，但老师也被当场抓进去了。炉子是他当年屋里唯一的取暖铁炉。\n回答依然克制冷峻，不哭不闹，但带着沉重事实：“……教书的。屋里冷，全靠那一口炉子顶着。后来装置拆了，人也没了。……算了，配得挺好，我拿走了。”");
-    Layer3.TriggerKeywords = { TEXT("安置办"), TEXT("爆破"), TEXT("老师"), TEXT("炉子"), TEXT("装置"), TEXT("冬天烧什么") };
+    Layer3.TriggerKeywords = { TEXT("安置办"), TEXT("爆破组"), TEXT("老师的炉子"), TEXT("老师家"), TEXT("危险装置"), TEXT("冬天烧什么"), TEXT("以前拆的东西") };
 
     Profile.Layers = { Layer1, Layer2, Layer3 };
     return Profile;
@@ -81,7 +127,7 @@ FDialoguePersonaProfile UAlchemyGameplaySubsystem::MakeOperatorProfile()
     Profile.Title = TEXT("跑腿的");
     Profile.Axis = TEXT("风");
     Profile.VoiceTone = TEXT("温度偏高，带着笑，但笑不到眼底。碎句，一句话分三截。口头禅：嗐、诶、得了、说是这么说、也没准儿。传话时一定会改至少一个词。从不关门睡觉，对敲铁片声有反应。");
-    Profile.DailyState = TEXT("森林里的跑腿。腿快记路好。要风牌，表面理由是路上用。话多、碎、带笑，热络但让人不太信。");
+    Profile.DailyState = TEXT("森林里的跑腿。腿快记路好。要风性的材料，表面理由是路上用。话多、碎、带笑，热络但让人不太信。");
     Profile.SecretPast = TEXT("以前是总局的电话接线员。上面要求监听，标记了一个同事的电话致其被带走。出逃是因为发现自己举报完之后当晚睡得很好。要的风是声音，一通没被监听的电话，是没有人在听你说话的证据。");
     Profile.QuickTags = { TEXT("路上用"), TEXT("淡一点的风"), TEXT("接官线的"), TEXT("留住风"), TEXT("一通没被监听的电话"), TEXT("没有人") };
 
@@ -97,14 +143,16 @@ FDialoguePersonaProfile UAlchemyGameplaySubsystem::MakeOperatorProfile()
     Layer2.Title = TEXT("第二层：以前是接官线的");
     Layer2.Summary = TEXT("承认以前接官线，开始暴露声音与铜丝的隐喻。");
     Layer2.Prompt = TEXT("你现在是第2层——透露以前接官线。\n承认以前是接官线的，城里大人物的声音全从铜丝里插过去。想要留住风，偶尔突然安静几秒。绝不提自己举报过同事。");
-    Layer2.TriggerKeywords = { TEXT("耳朵"), TEXT("塞子"), TEXT("铜丝"), TEXT("接线"), TEXT("电话"), TEXT("声音") };
+    Layer2.TriggerKeywords = { TEXT("为什么要这么大的风"), TEXT("这么大的风做什么"), TEXT("风拿来做什么"), TEXT("跑腿为什么需要风"), TEXT("你怎么判断风够不够"), TEXT("以前也这样赶路") };
+    Layer2.TriggerTopicKeywords = { TEXT("风"), TEXT("风性"), TEXT("跑腿"), TEXT("赶路"), TEXT("路上"), TEXT("材料"), TEXT("委托") };
+    Layer2.TriggerIntentKeywords = { TEXT("为什么"), TEXT("为何"), TEXT("做什么"), TEXT("干什么"), TEXT("怎么用"), TEXT("用来"), TEXT("以前"), TEXT("一直"), TEXT("这么大"), TEXT("这么多"), TEXT("需要"), TEXT("判断") };
 
     FDialoguePersonaLayer Layer3;
     Layer3.FamiliarityLevel = 3;
     Layer3.Title = TEXT("第三层：总局监听与无人的电话");
     Layer3.Summary = TEXT("核心真相已浮现。她承认监听和标记同事，却最害怕自己睡得很好。");
     Layer3.Prompt = TEXT("你现在是第3层——核心真相已浮现，不可逆转。\n当女巫提到监听、举报、电话或同事时，你不再笑嘻嘻。承认你在总局监听时标记了一个同事导致他被带走，而你害怕的是自己当晚睡得极香。说话极少、极静：“这个味道……没有人。……没有人就好。”");
-    Layer3.TriggerKeywords = { TEXT("总局"), TEXT("监听"), TEXT("同事"), TEXT("电话"), TEXT("没被监听"), TEXT("没有人"), TEXT("听筒"), TEXT("敲铁片") };
+    Layer3.TriggerKeywords = { TEXT("总局"), TEXT("监听"), TEXT("标记同事"), TEXT("举报同事"), TEXT("没被监听"), TEXT("没人监听"), TEXT("没有人在听"), TEXT("总局的电话"), TEXT("当晚睡得很好"), TEXT("敲铁片") };
 
     Profile.Layers = { Layer1, Layer2, Layer3 };
     return Profile;
@@ -118,7 +166,7 @@ FDialoguePersonaProfile UAlchemyGameplaySubsystem::MakeNovelistProfile()
     Profile.Title = TEXT("替人写信的");
     Profile.Axis = TEXT("水");
     Profile.VoiceTone = TEXT("温度中等偏暖，带着一层审视。叙述式，像在讲别人的事。本来要用比喻，说到一半收回去自嘲：“又说这种话了。你大概听不懂。”抽烟只在自己一人时抽，藏三包烟在床板底。");
-    Profile.DailyState = TEXT("森林里替人写信的。字好看。要水牌冲淡或润纸。表面理由是写信用的，墨水不够浓看不清。");
+    Profile.DailyState = TEXT("森林里替人写信的。字好看。要水性的材料冲淡或润纸。表面理由是写信用的，墨水不够浓看不清。");
     Profile.SecretPast = TEXT("出过三本书，女同性恋。禁书运动书被禁，理由是作者身份不当。在再教育面谈里，审查员说你以后不用写了，连夜逃亡，一本样书都没带出来。要的墨水是闻起来像自己写过的东西，像第二本里写的那场雨。");
     Profile.QuickTags = { TEXT("写信用的"), TEXT("墨水太浓"), TEXT("以前是写书的"), TEXT("稀释"), TEXT("你以后不用写了"), TEXT("第二本里的雨") };
 
@@ -134,14 +182,16 @@ FDialoguePersonaProfile UAlchemyGameplaySubsystem::MakeNovelistProfile()
     Layer2.Title = TEXT("第二层：以前是写书的");
     Layer2.Summary = TEXT("承认以前写过几本没人看的书，不再收回比喻。");
     Layer2.Prompt = TEXT("你现在是第2层——承认以前写过书。\n承认以前写过几本没人看的书。说“没人看”时带着自嘲，也有一点骄傲。你不再收回比喻，开始说书和字。不是因为想倾诉，而是太久没有遇到可能听得懂的人。");
-    Layer2.TriggerKeywords = { TEXT("写书"), TEXT("墨水太浓"), TEXT("书"), TEXT("作者"), TEXT("稀释") };
+    Layer2.TriggerKeywords = { TEXT("为什么要调墨水"), TEXT("墨水为什么这样调"), TEXT("这封信重要吗"), TEXT("你以前也写这种东西吗"), TEXT("你每天替谁写信"), TEXT("你更在意字还是纸") };
+    Layer2.TriggerTopicKeywords = { TEXT("墨水"), TEXT("写信"), TEXT("信件"), TEXT("纸"), TEXT("字"), TEXT("水性"), TEXT("材料"), TEXT("委托") };
+    Layer2.TriggerIntentKeywords = { TEXT("为什么"), TEXT("为何"), TEXT("怎么"), TEXT("以前"), TEXT("一直"), TEXT("每天"), TEXT("谁"), TEXT("什么"), TEXT("重要"), TEXT("用来"), TEXT("需要") };
 
     FDialoguePersonaLayer Layer3;
     Layer3.FamiliarityLevel = 3;
     Layer3.Title = TEXT("第三层：被禁的三本书与雨");
     Layer3.Summary = TEXT("核心真相已浮现。她承认三本书被禁、身份不当和连夜逃亡，不可逆回退。");
     Layer3.Prompt = TEXT("你现在是第3层——禁书与逃亡真相，不可逆转。\n承认出过三本书，因题材被禁。理由不是内容违规，而是“作者身份不当”。审查员说“你以后不用写了”。你当晚逃走，三本样书一本都没带出来。你想写一本不会被烧掉的书，像第二本里的那场雨。");
-    Layer3.TriggerKeywords = { TEXT("写书"), TEXT("禁书"), TEXT("作者身份不当"), TEXT("你以后不用写了"), TEXT("第二本"), TEXT("雨"), TEXT("审查员"), TEXT("再教育") };
+    Layer3.TriggerKeywords = { TEXT("禁书"), TEXT("书被禁"), TEXT("作者身份不当"), TEXT("你以后不用写了"), TEXT("第二本里的雨"), TEXT("三本书"), TEXT("审查员"), TEXT("再教育") };
 
     Profile.Layers = { Layer1, Layer2, Layer3 };
     return Profile;
@@ -201,11 +251,12 @@ int32 UAlchemyGameplaySubsystem::EvaluatePersonaTrigger(
     const int32 SafeLevel = FMath::Clamp(CurrentFamiliarity, 1, 3);
     for (int32 Level = 3; Level > SafeLevel; --Level)
     {
+        FString MatchReason;
         if (Profile.Layers.IsValidIndex(Level - 1) &&
-            AlchemyGameplay::ContainsAnyKeyword(PlayerText, Profile.Layers[Level - 1].TriggerKeywords))
+            AlchemyGameplay::MatchesLayerTrigger(PlayerText, Profile.Layers[Level - 1], MatchReason))
         {
             OutTriggeredLayer = Level;
-            OutReason = Profile.Layers[Level - 1].Summary;
+            OutReason = MatchReason;
             return Level;
         }
     }
@@ -307,6 +358,15 @@ FString UAlchemyGameplaySubsystem::BuildPersonaSystemPrompt(
     Prompt += TEXT("- 可以拒答、沉默、岔开话题，但必须保持该角色自己的说话节奏。\n");
     Prompt += TEXT("- 不要把玩家猜测当成已确认事实。\n");
     Prompt += FString::Printf(TEXT("- 本次对应委托序号：%d。\n\n"), CommissionOrderIndex);
+
+    FAlchemyCommissionDefinition Commission;
+    if (GetCommission(CommissionOrderIndex, Commission))
+    {
+        Prompt += TEXT("【委托的元素叙事】\n");
+        Prompt += FString::Printf(TEXT("- 目标药性：%s。\n"), *Commission.ElementRequest);
+        Prompt += FString::Printf(TEXT("- 委托情境：%s\n"), *Commission.Wish);
+        Prompt += TEXT("- 对话中只说火、风、水的药性、气味、温度、湿度或流动感，不把牌、卡牌或手牌说成世界里的实体。\n\n");
+    }
 
     if (!CompactMemoryJson.IsEmpty())
     {
@@ -437,7 +497,7 @@ TArray<FAlchemyCommissionDefinition> UAlchemyGameplaySubsystem::MakeCommissions(
     C1.OrderIndex = 1; C1.CustomerOrderIndex = 1; C1.Customer = TEXT("拆弹手"); C1.CharacterId = TEXT("blacksmith");
     C1.Wish = TEXT("你见过新砌的炉子没有？石头是冷的。我要的东西能把那种冷石头喂熟。就要火。别的什么都不要。");
     C1.SensoryPrompt = TEXT("她站在门槛边，眼神盯着熄灭的火塘。她只想要最纯净的烈火焦炭气味，不许混入一丝杂风和冷水。");
-    C1.Target = { 6, 0, 0 }; C1.SlotCount = 3; C1.CostLimit = 0; C1.HandCardsSpec = TEXT("火6"); C1.Teaching = TEXT("直投。垂线天然为零，这就是满分长什么样");
+    C1.Target = { 6, 0, 0 }; C1.ElementRequest = AlchemyGameplay::DescribeElementTarget(C1.Target); C1.SlotCount = 3; C1.CostLimit = 0; C1.HandCardsSpec = TEXT("火6"); C1.Teaching = TEXT("直投。垂线天然为零，这就是满分长什么样");
     C1.OpeningLine = TEXT("你见过新砌的炉子没有？石头是冷的。我要的东西能把那种冷石头喂熟。就要火。别的什么都不要。");
     C1.MustCards = { PipCard(TEXT("fire_6"), TEXT("权杖六"), EAlchemyElement::Fire, 6) }; Result.Add(C1);
 
@@ -445,7 +505,7 @@ TArray<FAlchemyCommissionDefinition> UAlchemyGameplaySubsystem::MakeCommissions(
     C2.OrderIndex = 2; C2.CustomerOrderIndex = 2; C2.Customer = TEXT("拆弹手"); C2.CharacterId = TEXT("blacksmith");
     C2.Wish = TEXT("火要猛。再带一点风。像院子里那种——你站在炉子旁边，火从炉膛里往外扑，风从门缝里灌进来。不要水。");
     C2.SensoryPrompt = TEXT("需要炉火的烈热配上院落里的冷风。你手上有多余的水性药草，绝不能顺手投进去！");
-    C2.Target = { 8, 3, 0 }; C2.SlotCount = 4; C2.CostLimit = 0; C2.HandCardsSpec = TEXT("火8 风3 水2"); C2.Teaching = TEXT("手上三张只该下两张。多投的圣杯二会变成垂线，也就是副作用");
+    C2.Target = { 8, 3, 0 }; C2.ElementRequest = AlchemyGameplay::DescribeElementTarget(C2.Target); C2.SlotCount = 4; C2.CostLimit = 0; C2.HandCardsSpec = TEXT("火8 风3 水2"); C2.Teaching = TEXT("手上三份材料只该下两份。多投的水性材料会变成垂线，也就是副作用");
     C2.OpeningLine = TEXT("火要猛。再带一点风。像院子里那种——你站在炉子旁边，火从炉膛里往外扑，风从门缝里灌进来。不要水。");
     C2.MustCards = { PipCard(TEXT("fire_8"), TEXT("权杖八"), EAlchemyElement::Fire, 8), PipCard(TEXT("wind_3"), TEXT("宝剑三"), EAlchemyElement::Wind, 3), PipCard(TEXT("water_2"), TEXT("圣杯二"), EAlchemyElement::Water, 2) }; Result.Add(C2);
 
@@ -453,55 +513,55 @@ TArray<FAlchemyCommissionDefinition> UAlchemyGameplaySubsystem::MakeCommissions(
     C3.OrderIndex = 3; C3.CustomerOrderIndex = 3; C3.Customer = TEXT("拆弹手"); C3.CharacterId = TEXT("blacksmith");
     C3.Wish = TEXT("热。从我手上拿走。肿也消掉。火拿走大头，风少拿一点。");
     C3.SensoryPrompt = TEXT("她手腕肿胀发黑，她要的是抽走热量的寒凉气味。你手上有火与风，必须借倒吊人的逆位仪轨彻底翻转！");
-    C3.Target = { -6, -2, 0 }; C3.SlotCount = 4; C3.CostLimit = 1; C3.HandCardsSpec = TEXT("火6 风2"); C3.Teaching = TEXT("负分量 = 夺走。倒吊人一张整瓶翻号；恶魔逐张贴也行，但要两点额度");
+    C3.Target = { -6, -2, 0 }; C3.ElementRequest = AlchemyGameplay::DescribeElementTarget(C3.Target); C3.SlotCount = 4; C3.CostLimit = 1; C3.HandCardsSpec = TEXT("火6 风2"); C3.Teaching = TEXT("负分量 = 夺走。用整瓶翻转或逐份反转的仪轨处理，但要两点额度");
     C3.OpeningLine = TEXT("热。从我手上拿走。肿也消掉。火拿走大头，风少拿一点。");
     C3.MustCards = { PipCard(TEXT("fire_6"), TEXT("权杖六"), EAlchemyElement::Fire, 6), PipCard(TEXT("wind_2"), TEXT("宝剑二"), EAlchemyElement::Wind, 2) }; Result.Add(C3);
 
     FAlchemyCommissionDefinition C4;
     C4.OrderIndex = 4; C4.CustomerOrderIndex = 1; C4.Customer = TEXT("接线员"); C4.CharacterId = TEXT("operator");
     C4.Wish = TEXT("风。要大。非常大。嗐，就是那种——你站在山梁上，风把你整个人往后推，你还得往前迈的那种。别的什么都不要。");
-    C4.SensoryPrompt = TEXT("他要在破晓前翻过三道山梁，手上只有一点微风，必须借大牌算子成倍放大！");
-    C4.Target = { 0, 20, 0 }; C4.SlotCount = 4; C4.CostLimit = 2; C4.HandCardsSpec = TEXT("风5"); C4.Teaching = TEXT("手上只有宝剑五，20 靠加法到不了。放大是唯一的路");
+    C4.SensoryPrompt = TEXT("他要在破晓前翻过三道山梁，手上只有一点微风，必须借放大性质的变换把风性成倍增强！");
+    C4.Target = { 0, 20, 0 }; C4.ElementRequest = AlchemyGameplay::DescribeElementTarget(C4.Target); C4.SlotCount = 4; C4.CostLimit = 2; C4.HandCardsSpec = TEXT("风5"); C4.Teaching = TEXT("手上只有一点风性，20 靠直接相加到不了。放大是唯一的路");
     C4.OpeningLine = TEXT("风。要大。非常大。嗐，就是那种——你站在山梁上，风把你整个人往后推，你还得往前迈的那种。别的什么都不要。");
     C4.MustCards = { PipCard(TEXT("wind_5"), TEXT("宝剑五"), EAlchemyElement::Wind, 5) }; Result.Add(C4);
 
     FAlchemyCommissionDefinition C5;
     C5.OrderIndex = 5; C5.CustomerOrderIndex = 2; C5.Customer = TEXT("接线员"); C5.CharacterId = TEXT("operator");
     C5.Wish = TEXT("风做骨架，水做密封。火一点都不要。……就是药粉要兜住，不能被风吹散，也不能被雨打湿。");
-    C5.SensoryPrompt = TEXT("山路被封了，他要改走下流水道。手上只有烈火与轻风，必须借命运之轮整体将火风水轮移一格！");
-    C5.Target = { 0, 7, 2 }; C5.SlotCount = 3; C5.CostLimit = 1; C5.HandCardsSpec = TEXT("火7 风2"); C5.Teaching = TEXT("手上有的不是要的。命运之轮把火→风→水整体轮一格，一张牌换掉两轴");
+    C5.SensoryPrompt = TEXT("山路被封了，他要改走下流水道。手上只有烈火与轻风，必须借元素转化把火性和风性转成需要的风性与水性！");
+    C5.Target = { 0, 7, 2 }; C5.ElementRequest = AlchemyGameplay::DescribeElementTarget(C5.Target); C5.SlotCount = 3; C5.CostLimit = 1; C5.HandCardsSpec = TEXT("火7 风2"); C5.Teaching = TEXT("手上有的元素方向不对。元素转化可以把火、风、水整体轮移一格，改变两条轴");
     C5.OpeningLine = TEXT("风做骨架，水做密封。火一点都不要。……就是药粉要兜住，不能被风吹散，也不能被雨打湿。");
     C5.MustCards = { PipCard(TEXT("fire_7"), TEXT("权杖七"), EAlchemyElement::Fire, 7), PipCard(TEXT("wind_2"), TEXT("宝剑二"), EAlchemyElement::Wind, 2) }; Result.Add(C5);
 
     FAlchemyCommissionDefinition C6;
     C6.OrderIndex = 6; C6.CustomerOrderIndex = 3; C6.Customer = TEXT("接线员"); C6.CharacterId = TEXT("operator");
     C6.Wish = TEXT("三样都带上路。柴、信、水壶。但水到了就蒸干，别让我扛空壶回来。火和风要留住。");
-    C6.SensoryPrompt = TEXT("他死死盯着你，要求三样材料全部下锅。但水气会让他想起总局潮湿的耳机，必须借死神斩去最小的一丝水气！");
-    C6.Target = { 5, 3, 0 }; C6.SlotCount = 4; C6.bMustUseAll = true; C6.CostLimit = 1; C6.HandCardsSpec = TEXT("火5 风3 水1"); C6.Teaching = TEXT("全下 → (5,3,1)。死神只收最小的非零轴，正好剔掉圣杯一");
+    C6.SensoryPrompt = TEXT("他死死盯着你，要求三样材料全部下锅。但水气会让他想起总局潮湿的耳机，必须削去最小的一丝水性！");
+    C6.Target = { 5, 3, 0 }; C6.ElementRequest = AlchemyGameplay::DescribeElementTarget(C6.Target); C6.SlotCount = 4; C6.bMustUseAll = true; C6.CostLimit = 1; C6.HandCardsSpec = TEXT("火5 风3 水1"); C6.Teaching = TEXT("全下后是火5、风3、水1。削去最小的非零轴，正好去掉这一丝水性");
     C6.OpeningLine = TEXT("三样都带上路。柴、信、水壶。但水到了就蒸干，别让我扛空壶回来。火和风要留住。");
     C6.MustCards = { PipCard(TEXT("fire_5"), TEXT("权杖五"), EAlchemyElement::Fire, 5), PipCard(TEXT("wind_3"), TEXT("宝剑三"), EAlchemyElement::Wind, 3), PipCard(TEXT("water_1"), TEXT("圣杯一"), EAlchemyElement::Water, 1) }; Result.Add(C6);
 
     FAlchemyCommissionDefinition C7;
     C7.OrderIndex = 7; C7.CustomerOrderIndex = 1; C7.Customer = TEXT("小说家"); C7.CharacterId = TEXT("novelist");
     C7.Wish = TEXT("火要一点，但别太重。带点风的干爽。不要水。……就像写信——墨太重了，纸会洇。");
-    C7.SensoryPrompt = TEXT("老纸脆得发卷，药性太浓会烧穿纸背。必须用塔把过烈的主轴强行折半削弱！");
-    C7.Target = { 3, 2, 0 }; C7.SlotCount = 4; C7.CostLimit = 1; C7.HandCardsSpec = TEXT("火6 风2"); C7.Teaching = TEXT("料太浓，且没有更小的。塔只削最浓那轴：(6,2,0) → (3,2,0)");
+    C7.SensoryPrompt = TEXT("老纸脆得发卷，药性太浓会烧穿纸背。必须把过烈的火性主轴折半削弱！");
+    C7.Target = { 3, 2, 0 }; C7.ElementRequest = AlchemyGameplay::DescribeElementTarget(C7.Target); C7.SlotCount = 4; C7.CostLimit = 1; C7.HandCardsSpec = TEXT("火6 风2"); C7.Teaching = TEXT("火性太浓，且没有更小的材料。只削最浓那一轴：火6、风2变成火3、风2");
     C7.OpeningLine = TEXT("火要一点，但别太重。带点风的干爽。不要水。……就像写信——墨太重了，纸会洇。");
     C7.MustCards = { PipCard(TEXT("fire_6"), TEXT("权杖六"), EAlchemyElement::Fire, 6), PipCard(TEXT("wind_2"), TEXT("宝剑二"), EAlchemyElement::Wind, 2) }; Result.Add(C7);
 
     FAlchemyCommissionDefinition C8;
     C8.OrderIndex = 8; C8.CustomerOrderIndex = 2; C8.Customer = TEXT("小说家"); C8.CharacterId = TEXT("novelist");
     C8.Wish = TEXT("三样都下锅。但风和水都滤掉。我只要火。要猛。……就是字要烧进纸里，别的什么都不要留。");
-    C8.SensoryPrompt = TEXT("三样杂料全入锅，必须用隐者一张牌彻底剔除所有副轴杂质，再行翻倍！");
-    C8.Target = { 10, 0, 0 }; C8.SlotCount = 5; C8.bMustUseAll = true; C8.CostLimit = 2; C8.HandCardsSpec = TEXT("火5 风3 水2"); C8.Teaching = TEXT("全下 → (5,3,2)。隐者一张提掉全部杂质，再放大一次");
+    C8.SensoryPrompt = TEXT("三样杂料全入锅，必须彻底剔除风性和水性杂质，再把火性放大！");
+    C8.Target = { 10, 0, 0 }; C8.ElementRequest = AlchemyGameplay::DescribeElementTarget(C8.Target); C8.SlotCount = 5; C8.bMustUseAll = true; C8.CostLimit = 2; C8.HandCardsSpec = TEXT("火5 风3 水2"); C8.Teaching = TEXT("全下后是火5、风3、水2。先提掉风水杂质，再把火性放大一次");
     C8.OpeningLine = TEXT("三样都下锅。但风和水都滤掉。我只要火。要猛。……就是字要烧进纸里，别的什么都不要留。");
     C8.MustCards = { PipCard(TEXT("fire_5"), TEXT("权杖五"), EAlchemyElement::Fire, 5), PipCard(TEXT("wind_3"), TEXT("宝剑三"), EAlchemyElement::Wind, 3), PipCard(TEXT("water_2"), TEXT("圣杯二"), EAlchemyElement::Water, 2) }; Result.Add(C8);
 
     FAlchemyCommissionDefinition C9;
     C9.OrderIndex = 9; C9.CustomerOrderIndex = 3; C9.Customer = TEXT("小说家"); C9.CharacterId = TEXT("novelist");
     C9.Wish = TEXT("三样都要。火最多。这本书的字不能褪。……纸烂了字还在的那种。");
-    C9.SensoryPrompt = TEXT("要为这片林地立传，墨色必须永固。必须用宇宙开辟副锅隔离太阳封蜡，并在外层补足主味！");
-    C9.Target = { 11, 6, 6 }; C9.SlotCount = 6; C9.CostLimit = 4; C9.HandCardsSpec = TEXT("火3 风3 水3 火5"); C9.Teaching = TEXT("期末考：太阳要放大三轴，但它会封住当前锅导致后续无法加入权杖五。给太阳单开一口副锅");
+    C9.SensoryPrompt = TEXT("要为这片林地立传，墨色必须永固。必须在副锅里同时放大火、风、水三种药性，并在外层补足火性主味！");
+    C9.Target = { 11, 6, 6 }; C9.ElementRequest = AlchemyGameplay::DescribeElementTarget(C9.Target); C9.SlotCount = 6; C9.CostLimit = 4; C9.HandCardsSpec = TEXT("火3 风3 水3 火5"); C9.Teaching = TEXT("期末考：需要同时放大三种药性，但封存会影响后续加入。给这次放大单开一口副锅");
     C9.OpeningLine = TEXT("三样都要。火最多。这本书的字不能褪。……纸烂了字还在的那种。");
     C9.MustCards = { PipCard(TEXT("fire_5"), TEXT("权杖五"), EAlchemyElement::Fire, 5), PipCard(TEXT("fire_3"), TEXT("权杖三"), EAlchemyElement::Fire, 3), PipCard(TEXT("wind_3"), TEXT("宝剑三"), EAlchemyElement::Wind, 3), PipCard(TEXT("water_3"), TEXT("圣杯三"), EAlchemyElement::Water, 3) }; Result.Add(C9);
 
