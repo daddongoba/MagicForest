@@ -5,6 +5,11 @@ three-layer NPC personas, DeepSeek-compatible chat requests, 22 major cards, fou
 modifiers, nine commissions, vector evaluation, world-consequence prompt construction,
 and compact dialogue-memory SaveGame tables.
 
+The plugin also provides `DailyMushroomSubsystem`: a saved world-day counter and
+deterministic daily availability/`FAlchemyVector` values for the existing mushroom
+types. The subsystem is Blueprint-callable; the player's harvest Blueprint must call
+`IsMushroomAvailable` and `GetMushroomValue` before hiding a mushroom.
+
 ## Install
 
 Copy this folder to:
@@ -73,6 +78,15 @@ The default save slot is DialogueMemoryLedger, stored by Unreal under Saved/Save
 These are runtime USTRUCT rows in a SaveGame, not mutable UDataTable assets. This works in packaged builds and avoids asset writes at runtime.
 
 The exact prompt and JSON schema are included in Resources.
+
+### World day and mushrooms
+
+- `GetCurrentDay`, `AdvanceDay`, and `SetCurrentDay` manage the saved day in the
+  `WorldDayState` slot.
+- `GetDailyMushrooms` returns all known types with that day's availability and value.
+- `GetDailyMushroom`, `IsMushroomAvailable`, and `GetMushroomValue` query one type.
+- The values are deterministic for a given day and type, so loading the same day
+  reproduces the same harvest rules.
 
 ## Package check
 

@@ -129,9 +129,11 @@ def main() -> int:
         ROOT / "Source/DialogueMemoryTable/Public/AlchemyGameplayTypes.h",
         ROOT / "Source/DialogueMemoryTable/Public/AlchemyGameplaySubsystem.h",
         ROOT / "Source/DialogueMemoryTable/Public/DialogueAIServiceSubsystem.h",
+        ROOT / "Source/DialogueMemoryTable/Public/DailyMushroomSubsystem.h",
         ROOT / "Source/DialogueMemoryTable/Private/DialogueMemoryTableSubsystem.cpp",
         ROOT / "Source/DialogueMemoryTable/Private/AlchemyGameplaySubsystem.cpp",
         ROOT / "Source/DialogueMemoryTable/Private/DialogueAIServiceSubsystem.cpp",
+        ROOT / "Source/DialogueMemoryTable/Private/DailyMushroomSubsystem.cpp",
         ROOT / "Source/DialogueMemoryTable/Private/DialogueMemoryTableModule.cpp",
     ]
     for source_file in source_files:
@@ -157,6 +159,9 @@ def main() -> int:
         "RequestChatCompletion",
         "RequestNpcDialogue",
         "RequestWorldConsequence",
+        "AdvanceDay",
+        "GetDailyMushrooms",
+        "GetMushroomValue",
     ):
         require(symbol in combined, f"missing implementation symbol: {symbol}")
 

@@ -2,6 +2,16 @@
 
 本文件记录增量仓库每次提交上传的内容。最新更新放在最前面；每次上传前必须把本条记录与对应文件一起提交。验证状态应区分“本次验证”“历史记录”与“未验证”。
 
+## 2026-10-09-01：全局天状态与每日蘑菇数值接口
+
+- **目的 / 基线**：为 demo3_UE58 1.5 增加可保存的全局“天”，让蘑菇可采摘集合和绑定的火/风/水数值按天稳定变化；基于 main `f6463a4`。
+- **新增**：`Plugins/DialogueMemoryTable/Source/DialogueMemoryTable/Public/DailyMushroomSubsystem.h`、`Private/DailyMushroomSubsystem.cpp`；`Docs/DailyMushroomSystem_2026-10-09.md`。
+- **修改**：`Source/demo3_UE58/ForestNPCDialogueSubsystem.cpp`、`Plugins/DialogueMemoryTable/Tools/validate_package.py`。
+- **行为**：`WorldDayState` 保存当前天；`AdvanceDay` / `SetCurrentDay` 管理日期；19 种现有基础蘑菇每天得到稳定的可采摘状态和 `FAlchemyVector` 数值；NPC 记忆写入使用同一世界日。
+- **原型核对**：桌面原型包含 22 张大牌、4 张宫廷牌、9 个委托和三轴数值，但没有每日蘑菇表；原型小牌目前由委托必需牌加随机 1–8 小牌生成。
+- **验证 / 未完成**：插件静态包检查和差异检查待执行；未在 UE 5.8 编译，未修改二进制采摘蓝图，未完成蓝图接线、换天刷新和 PIE 验证。完整接线步骤见 [每日蘑菇系统说明](DailyMushroomSystem_2026-10-09.md)。
+- **上传状态**：待上传。
+
 ## 2026-10-07-05：绑定完整 AI 人设与自动熟悉度升级
 
 - **目的 / 前置**：修正森林 NPC 只有通用性格、未调用升级接口的问题；基于 2026-10-07-03，demo3_UE58 1.5。

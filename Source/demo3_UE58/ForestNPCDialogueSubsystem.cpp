@@ -2,6 +2,7 @@
 #include "DialogueAIServiceSubsystem.h"
 #include "DialogueMemoryTableSubsystem.h"
 #include "AlchemyGameplaySubsystem.h"
+#include "DailyMushroomSubsystem.h"
 #include "Kismet/GameplayStatics.h"
 #include "Dom/JsonObject.h"
 #include "Serialization/JsonSerializer.h"
@@ -22,7 +23,7 @@ void UForestDialogueRequestContext::Completed(bool Success,const FString& Text)
 void UForestNPCDialogueSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
  Super::Initialize(Collection);
- Collection.InitializeDependency<UDialogueMemoryTableSubsystem>();Collection.InitializeDependency<UAlchemyGameplaySubsystem>();Collection.InitializeDependency<UDialogueAIServiceSubsystem>();
+ Collection.InitializeDependency<UDialogueMemoryTableSubsystem>();Collection.InitializeDependency<UAlchemyGameplaySubsystem>();Collection.InitializeDependency<UDialogueAIServiceSubsystem>();Collection.InitializeDependency<UDailyMushroomSubsystem>();
  RegisterForestPersonas();ConfigurePersistence(Slot,TEXT("DialogueMemoryLedger"));
  auto* AI=GetGameInstance()->GetSubsystem<UDialogueAIServiceSubsystem>();
  FString Url=FPlatformMisc::GetEnvironmentVariable(TEXT("FOREST_DIALOGUE_BASE_URL"));if(Url.IsEmpty())Url=TEXT("https://api.deepseek.com/v1");
@@ -66,9 +67,9 @@ bool UForestNPCDialogueSubsystem::BeginConversation(FName Id)
 {
  if(!bPersistenceReady || !ActiveNpc.IsNone())return false;
  FDialoguePersonaProfile Profile;if(!GetGameInstance()->GetSubsystem<UAlchemyGameplaySubsystem>()->GetPersonaProfile(Id,Profile))return false;
- auto* Memory=GetGameInstance()->GetSubsystem<UDialogueMemoryTableSubsystem>();int32 Level=1;int64 Flags=0,Last=0;
+ auto* Memory=GetGameInstance()->GetSubsystem<UDialogueMemoryTableSubsystem>();auto* Day=GetGameInstance()->GetSubsystem<UDailyMushroomSubsystem>();const int32 WorldDay=Day?Day->GetCurrentDay():1;int32 Level=1;int64 Flags=0,Last=0;
  for(const auto& S:Memory->GetLedgerSnapshot().NpcStates)if(S.NpcId==Id){Level=S.Familiarity;Flags=S.KnownSecretFlags;Last=S.LastSessionId;}
- FString Error;if(!Memory->SetAuthoritativeNpcProgress(Id,Level,Flags,0,true,Error)){Status=Error;return false;}
+ FString Error;if(!Memory->SetAuthoritativeNpcProgress(Id,Level,Flags,WorldDay,true,Error)){Status=Error;return false;}
  auto& R=Row(Id);R.NextSession=FMath::Max(R.NextSession,Last+1);
  ActiveNpc=Id;SessionTranscript.Reset();bWaiting=false;++Generation;
  Status=bOfflineTest?TEXT("离线联调：模拟回复，不调用 AI"):TEXT("输入内容，按 Enter 发送");
@@ -105,7 +106,8 @@ bool UForestNPCDialogueSubsystem::SendPlayerMessage(const FString& Raw)
  for(const auto& State:GetGameInstance()->GetSubsystem<UDialogueMemoryTableSubsystem>()->GetLedgerSnapshot().NpcStates)
   if(State.NpcId==ActiveNpc){KnownSecretFlags=State.KnownSecretFlags;break;}
  int32 NewFamiliarity=1,TriggeredLayer=0;FString ProgressError;
- if(!Gameplay || !Gameplay->AdvancePersonaFromPlayerText(ActiveNpc,Text,KnownSecretFlags,0,true,NewFamiliarity,TriggeredLayer,ProgressError))
+ const int32 WorldDay=GetGameInstance()->GetSubsystem<UDailyMushroomSubsystem>()->GetCurrentDay();
+ if(!Gameplay || !Gameplay->AdvancePersonaFromPlayerText(ActiveNpc,Text,KnownSecretFlags,WorldDay,true,NewFamiliarity,TriggeredLayer,ProgressError))
  {Status=ProgressError.IsEmpty()?TEXT("熟悉度更新失败，请稍后重试"):ProgressError;OnConversationUpdated.Broadcast();return false;}
  auto& R=Row(ActiveNpc);const auto M=ForestDialogue::Message(TEXT("user"),Text);R.History.Add(M);SessionTranscript.Add(M);bWaiting=true;Status=TEXT("对方正在回答…");Persist();OnConversationUpdated.Broadcast();
  if(bOfflineTest)
@@ -131,7 +133,8 @@ void UForestNPCDialogueSubsystem::HandleResponse(UForestDialogueRequestContext* 
   if(R.PendingSession!=Context->Session){RequestSummary(R);return;}
   if(Success)
   {
-   const auto Result=GetGameInstance()->GetSubsystem<UDialogueMemoryTableSubsystem>()->ApplyMemoryPatchJson(ForestDialogue::CleanJson(Text),R.NpcId,R.PendingSession,0,true);
+   const int32 WorldDay=GetGameInstance()->GetSubsystem<UDailyMushroomSubsystem>()->GetCurrentDay();
+   const auto Result=GetGameInstance()->GetSubsystem<UDialogueMemoryTableSubsystem>()->ApplyMemoryPatchJson(ForestDialogue::CleanJson(Text),R.NpcId,R.PendingSession,WorldDay,true);
    Success=Result.bSuccess;if(!Success)Status=TEXT("记忆校验失败，已保留待重试会话：")+Result.ErrorCode.ToString();
   }
   else Status=TEXT("记忆总结暂不可用，会话已保存，稍后可重试");
