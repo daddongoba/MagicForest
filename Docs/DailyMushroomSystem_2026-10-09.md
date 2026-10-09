@@ -16,6 +16,12 @@
 
 同一天内同一类型的结果稳定，换天后可采摘集合和点数会变化，元素保持不变。随机只负责生成当天表行的可用状态、点数和权重，AI 不参与数值决定。数值使用现有 `FAlchemyVector`，可以直接传给炼金合成或评估逻辑。
 
+## 次日元素修正表（条件占位）
+
+`FDailyElementModifierRow` 为前一天合成结果影响后一天蘑菇获取预留结构。它记录来源天、目标天、角色、受影响元素、阻断/减少/增强效果，以及条件和效果占位文本。当前提供三条模板：低分阻断主导元素、低分减少主导元素、高分奖励主导元素；具体评分阈值和数值暂不写死，也不会自动应用到蘑菇生成。
+
+评分系统完成后，结算流程可以将解析后的修正通过 `AddElementModifier` 保存，再用 `GetElementModifiersForDay` 在目标日读取。这样不会把评分条件、蘑菇固定元素和每日随机数值混在同一层。
+
 ## 蓝图接入
 
 现有玩家采摘逻辑位于 `Content/Witch_House/Demo/FirstPerson/Blueprints/BP_FirstPersonCharacter.uasset`，当前只按 Mesh 名称计数。需要在完整工程的 `HarvestMushroom(MeshName)` 中加入：

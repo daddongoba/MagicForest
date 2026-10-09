@@ -179,6 +179,86 @@ bool UDailyMushroomSubsystem::GetMushroomValue(const FName MushroomId, FAlchemyV
     return true;
 }
 
+TArray<FDailyElementModifierRow> UDailyMushroomSubsystem::GetDailyElementModifierRuleTemplates() const
+{
+    TArray<FDailyElementModifierRow> Templates;
+
+    FDailyElementModifierRow Block;
+    Block.RuleId = TEXT("placeholder_low_score_block");
+    Block.ConditionId = TEXT("score_threshold_pending");
+    Block.ConditionPlaceholder = TEXT("前一天评分低于阈值（待数值系统定义）");
+    Block.EffectPlaceholder = TEXT("次日该角色主导元素暂时无法获取");
+    Block.Tags = TEXT("placeholder,low_score,block_element");
+    Templates.Add(Block);
+
+    FDailyElementModifierRow Reduce;
+    Reduce.RuleId = TEXT("placeholder_low_score_reduce");
+    Reduce.ConditionId = TEXT("score_band_pending");
+    Reduce.ConditionPlaceholder = TEXT("前一天评分处于惩罚区间（待数值系统定义）");
+    Reduce.EffectPlaceholder = TEXT("次日该角色主导元素的可采数量减少");
+    Reduce.Tags = TEXT("placeholder,low_score,reduce_availability");
+    Templates.Add(Reduce);
+
+    FDailyElementModifierRow Bonus;
+    Bonus.RuleId = TEXT("placeholder_high_score_bonus");
+    Bonus.ConditionId = TEXT("score_bonus_pending");
+    Bonus.ConditionPlaceholder = TEXT("前一天评分达到奖励区间（待数值系统定义）");
+    Bonus.EffectPlaceholder = TEXT("次日该角色主导元素增加或增强（待数值系统定义）");
+    Bonus.Tags = TEXT("placeholder,high_score,bonus_element");
+    Templates.Add(Bonus);
+
+    return Templates;
+}
+
+TArray<FDailyElementModifierRow> UDailyMushroomSubsystem::GetElementModifiersForDay(const int32 TargetDay) const
+{
+    TArray<FDailyElementModifierRow> Result;
+    if (!Save || TargetDay < 1)
+    {
+        return Result;
+    }
+
+    for (const FDailyElementModifierRow& Modifier : Save->ElementModifiers)
+    {
+        if (Modifier.TargetDay == TargetDay)
+        {
+            Result.Add(Modifier);
+        }
+    }
+    return Result;
+}
+
+bool UDailyMushroomSubsystem::AddElementModifier(const FDailyElementModifierRow& Modifier)
+{
+    if (!Save || Modifier.TargetDay < 1 || Modifier.RuleId.IsNone())
+    {
+        return false;
+    }
+
+    FDailyElementModifierRow Copy = Modifier;
+    Copy.AvailabilityScale = FMath::Clamp(Copy.AvailabilityScale, 0.0f, 1.0f);
+    Copy.PipValueScale = FMath::Max(0.0f, Copy.PipValueScale);
+    Save->ElementModifiers.RemoveAll([&Copy](const FDailyElementModifierRow& Existing)
+    {
+        return Existing.RuleId == Copy.RuleId && Existing.TargetDay == Copy.TargetDay;
+    });
+    Save->ElementModifiers.Add(Copy);
+    return Persist();
+}
+
+bool UDailyMushroomSubsystem::ClearElementModifiersForDay(const int32 TargetDay)
+{
+    if (!Save || TargetDay < 1)
+    {
+        return false;
+    }
+    Save->ElementModifiers.RemoveAll([TargetDay](const FDailyElementModifierRow& Modifier)
+    {
+        return Modifier.TargetDay == TargetDay;
+    });
+    return Persist();
+}
+
 FString UDailyMushroomSubsystem::GetDayStatusText() const
 {
     int32 AvailableCount = 0;

@@ -93,6 +93,11 @@ The exact prompt and JSON schema are included in Resources.
   random pip value from 1 to 9, availability, and weight. The seeded random stream
   makes the row stable for a given day and type, so loading the same day reproduces
   the same harvest rules without LLM.
+- `FDailyElementModifierRow` is the placeholder table for score-driven next-day
+  consequences. `GetDailyElementModifierRuleTemplates` exposes block/reduce/bonus
+  condition slots without assuming score thresholds. `AddElementModifier` persists
+  a resolved row for a target day; `GetElementModifiersForDay` reads it back. These
+  rows are not applied to mushroom generation until the scoring rules are defined.
 - Call `ConfirmDryPotSynthesis` once after the dry-pot synthesis result is confirmed
   to enter the next day. `AdvanceDay` remains available for tests and debug flows.
 

@@ -42,6 +42,58 @@ struct DIALOGUEMEMORYTABLE_API FDailyMushroomCardRow
     FString Tags;
 };
 
+/**
+ * Next-day element consequence row. Conditions and numeric thresholds are
+ * intentionally placeholders until the scoring system is defined.
+ */
+USTRUCT(BlueprintType)
+struct DIALOGUEMEMORYTABLE_API FDailyElementModifierRow
+{
+    GENERATED_BODY()
+
+    UPROPERTY(BlueprintReadWrite)
+    FName RuleId = NAME_None;
+
+    UPROPERTY(BlueprintReadWrite)
+    FName ConditionId = NAME_None;
+
+    UPROPERTY(BlueprintReadWrite)
+    FString ConditionPlaceholder;
+
+    UPROPERTY(BlueprintReadWrite)
+    FString EffectPlaceholder;
+
+    UPROPERTY(BlueprintReadWrite)
+    int32 SourceDay = 0;
+
+    UPROPERTY(BlueprintReadWrite)
+    int32 TargetDay = 0;
+
+    UPROPERTY(BlueprintReadWrite)
+    FName SourceCharacterId = NAME_None;
+
+    UPROPERTY(BlueprintReadWrite)
+    EAlchemyElement AffectedElement = EAlchemyElement::Fire;
+
+    UPROPERTY(BlueprintReadWrite)
+    bool bBlocked = false;
+
+    UPROPERTY(BlueprintReadWrite)
+    float AvailabilityScale = 1.0f;
+
+    UPROPERTY(BlueprintReadWrite)
+    int32 MaxAvailableCount = -1;
+
+    UPROPERTY(BlueprintReadWrite)
+    float PipValueScale = 1.0f;
+
+    UPROPERTY(BlueprintReadWrite)
+    int32 PipValueDelta = 0;
+
+    UPROPERTY(BlueprintReadWrite)
+    FString Tags;
+};
+
 UCLASS()
 class DIALOGUEMEMORYTABLE_API UDailyMushroomSaveGame : public USaveGame
 {
@@ -53,6 +105,9 @@ public:
 
     UPROPERTY()
     int32 LastConfirmedSynthesisDay = 0;
+
+    UPROPERTY()
+    TArray<FDailyElementModifierRow> ElementModifiers;
 };
 
 /** Shared world-day state and deterministic daily mushroom availability/values. */
@@ -87,6 +142,18 @@ public:
 
     UFUNCTION(BlueprintPure, Category = "World|Mushrooms")
     bool GetMushroomValue(FName MushroomId, FAlchemyVector& OutValue) const;
+
+    UFUNCTION(BlueprintPure, Category = "World|Mushrooms")
+    TArray<FDailyElementModifierRow> GetDailyElementModifierRuleTemplates() const;
+
+    UFUNCTION(BlueprintPure, Category = "World|Mushrooms")
+    TArray<FDailyElementModifierRow> GetElementModifiersForDay(int32 TargetDay) const;
+
+    UFUNCTION(BlueprintCallable, Category = "World|Mushrooms")
+    bool AddElementModifier(const FDailyElementModifierRow& Modifier);
+
+    UFUNCTION(BlueprintCallable, Category = "World|Mushrooms")
+    bool ClearElementModifiersForDay(int32 TargetDay);
 
     UFUNCTION(BlueprintPure, Category = "World|Day")
     FString GetDayStatusText() const;
